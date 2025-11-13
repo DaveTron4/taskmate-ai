@@ -10,10 +10,31 @@ erDiagram
     %% Defines the main user account
     User {
         int user_id PK "User's unique ID"
-        string email "Login email (unique)"
-        string password_hash "Hashed password"
+        string email "Login email (may be null for provider-only accounts)"
+        bool email_verified "Has the email been verified?"
+        string username "Optional display/username"
         string first_name "Optional first name"
+        string avatar_url "Profile/avatar URL (from provider)"
+        string password_hash "Hashed password (nullable for provider-only)"
         datetime created_at "Account creation timestamp"
+        datetime updated_at "Last update timestamp"
+        datetime last_login_at "Last login timestamp"
+    }
+
+    %% Separate table for OAuth / external identities (recommended)
+    Identity {
+        int identity_id PK "Identity unique ID"
+        int user_id FK "Links to User.user_id"
+        string provider "e.g., 'github', 'google'"
+        string provider_user_id "ID from provider (GitHub user ID)"
+        string provider_username "Username on provider (e.g., GitHub login)"
+        string avatar_url "Avatar URL from provider (optional)"
+        string access_token_encrypted "Encrypted access token"
+        string refresh_token_encrypted "Encrypted refresh token (nullable)"
+        datetime token_expires_at "When access token expires (nullable)"
+        string scopes "Token scopes granted (comma-separated)"
+        jsonb profile_json "Raw profile payload from provider"
+        datetime linked_at "When this identity was linked to the user"
     }
 
     %% Defines the connected services (Gmail, Canvas, etc.)
@@ -68,10 +89,31 @@ erDiagram
     %% Defines the main user account
     User {
         int user_id PK "User's unique ID"
-        string email "Login email (unique)"
-        string password_hash "Hashed password"
+        string email "Login email (may be null for provider-only accounts)"
+        bool email_verified "Has the email been verified?"
+        string username "Optional display/username"
         string first_name "Optional first name"
+        string avatar_url "Profile/avatar URL (from provider)"
+        string password_hash "Hashed password (nullable for provider-only)"
         datetime created_at "Account creation timestamp"
+        datetime updated_at "Last update timestamp"
+        datetime last_login_at "Last login timestamp"
+    }
+
+    %% Separate table for OAuth / external identities (recommended)
+    Identity {
+        int identity_id PK "Identity unique ID"
+        int user_id FK "Links to User.user_id"
+        string provider "e.g., 'github', 'google'"
+        string provider_user_id "ID from provider (GitHub user ID)"
+        string provider_username "Username on provider (e.g., GitHub login)"
+        string avatar_url "Avatar URL from provider (optional)"
+        string access_token_encrypted "Encrypted access token"
+        string refresh_token_encrypted "Encrypted refresh token (nullable)"
+        datetime token_expires_at "When access token expires (nullable)"
+        string scopes "Token scopes granted (comma-separated)"
+        jsonb profile_json "Raw profile payload from provider"
+        datetime linked_at "When this identity was linked to the user"
     }
 
     %% Defines the connected services (Gmail, Canvas, etc.)
@@ -116,7 +158,8 @@ erDiagram
         datetime received_at "Email reception time"
     }
 
-    %% ---- Relationships (All are One-to-Many) ----
+    %% ---- Relationships (All are One-to-Many unless otherwise noted) ----
+    User ||--o{ Identity : "has identity (user_id)"
     User ||--o{ Integration : "connects (user_id)"
     User ||--o{ Task : "has (user_id)"
     User ||--o{ Category : "creates (user_id)"

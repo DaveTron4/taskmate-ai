@@ -26,12 +26,6 @@ Backend: Express, PostgreSQL, Render, Composio
 
 ## Features
 
-### Comprosio Integration
-
-Connects Gmail, Google Calendar, and Canvas through Composio to automatically fetch assigments, new emails, and meetings coming up.
-
-[gif goes here]
-
 ### Task Prioritization
 
 Analyzes all imported tasks and deadlines using AI to suggest what to focus on next — helping students stay productive without feeling overwhelmed.
@@ -65,6 +59,86 @@ Scans the user's Gmail inbox for important messages (like from professors) and d
 ### Dashboard Filtering
 
 Allows users to filter the task list and calendar view by category (e.g., "School," "Personal") or by source (e.g., "Canvas," "Gmail") to focus on one area at a time.
+
+[gif goes here]
+
+### Integrate Composio
+Connect the application to third-party tools and APIs using the Composio platform.
+
+[gif goes here]
+
+### Toast Alerts
+Show pop-up notifications (toasts) to provide brief feedback to the user (e.g., "Task saved successfully!").
+
+[gif goes here]
+
+### Disable Buttons After Click
+Prevent users from accidentally submitting a form or action multiple times by disabling the button after the first click.
+
+[gif goes here]
+
+### Implement Spinners
+Display a loading spinner or indicator to show the user that data is being fetched or an action is processing.
+
+[gif goes here]
+
+### Set up GitHub OAuth
+Allow users to log in or authenticate with the application using their existing GitHub account.
+
+[gif goes here]
+
+### Validate Data - Backend
+Add server-side checks to ensure all data received from the client (e.g., in forms) is correct, complete, and secure before processing.
+
+[gif goes here]
+
+### Gracefull Error Handling - Backend
+Implement a robust system on the server to catch, manage, and send clear, helpful error messages to the client instead of crashing.
+
+[gif goes here]
+
+### On Page Interaction - Frontend
+Develop the core user interface interactions, such as clicking buttons, filling forms, and having the page update dynamically without a full reload.
+
+[gif goes here]
+
+### Redirect - Frontend
+Automatically navigate the user to a different page after a specific action (e.g., redirecting to the dashboard after a successful login).
+
+[gif goes here]
+
+### Reset Database Function - Backend
+Create a special backend function or endpoint to clear and reset the database to a default state, which is useful for testing.
+
+[gif goes here]
+
+### Implement Backend API - Backend
+Build the server-side API endpoints (e.g., GET, POST, PUT routes) that the frontend will use to create, read, update, and delete data.
+
+[gif goes here]
+
+### Deploy on Render
+Configure and deploy the entire full-stack application (both frontend and backend) to the Render hosting platform to make it live on the web.
+
+[gif goes here]
+
+### Create Dynamic Routing - Frontend
+Set up client-side routing to handle dynamic URLs, such as viewing a specific item by its ID (e.g., `/tasks/123`).
+
+[gif goes here]
+
+### Create Dynamic Routing - Backend
+Set up server-side API routes to handle dynamic parameters, like fetching data for a specific user or item (e.g., `/api/user/:id`).
+
+[gif goes here]
+
+### Set up React Frontend
+Initialize and configure the basic file structure, dependencies, and boilerplate for the client-side application using the React library.
+
+[gif goes here]
+
+### Set up Express Backend
+Initialize and configure the basic file structure, dependencies, and server setup for the backend API using the Express.js framework.
 
 [gif goes here]
 

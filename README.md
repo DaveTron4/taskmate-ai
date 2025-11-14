@@ -82,10 +82,10 @@ Display a loading spinner or indicator to show the user that data is being fetch
 
 [gif goes here]
 
-### Set up GitHub OAuth
+### ✅ Set up GitHub OAuth
 Allow users to log in or authenticate with the application using their existing GitHub account.
 
-[gif goes here]
+![GitHub OAuth](./feature%20gifs/github_oauth.gif)
 
 ### Validate Data - Backend
 Add server-side checks to ensure all data received from the client (e.g., in forms) is correct, complete, and secure before processing.

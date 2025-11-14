@@ -107,10 +107,10 @@ Automatically navigate the user to a different page after a specific action (e.g
 
 [gif goes here]
 
-### Reset Database Function - Backend
+### ✅ Reset Database Function - Backend
 Create a special backend function or endpoint to clear and reset the database to a default state, which is useful for testing.
 
-[gif goes here]
+![Dabase Reset](./feature%20gifs/database_reset.gif)
 
 ### Implement Backend API - Backend
 Build the server-side API endpoints (e.g., GET, POST, PUT routes) that the frontend will use to create, read, update, and delete data.

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import Dashboard from './components/Dashboard'
+import Calendar from './components/Calendar'
 import Top from './components/Top'
 
 interface User {
@@ -58,10 +58,10 @@ function DashboardPage() {
     }
 
     return (
-        <div className="min-h-screen p-6">
+        <div className="min-h-screen flex flex-col gap-2">
             <Top user={user} />
-            <div className="mt-8">
-                <Dashboard />
+            <div className="flex-1 p-6">
+                <Calendar />
             </div>
         </div >
     )

@@ -26,7 +26,7 @@ function Top({ user }: TopProps) {
     }
 
     return (
-        <div className="flex items-start justify-between w-full bg-white rounded-lg p-6 shadow-sm">
+        <div className="flex items-start justify-between w-full bg-white p-6 shadow-sm">
 
             {/* LEFT SIDE */}
             <div>

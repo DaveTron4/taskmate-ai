@@ -13,7 +13,7 @@
   "description": "",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js",
+    "start": "npx nodemon server.js",
     "reset": "node config/reset.js"
   },
   "keywords": [],

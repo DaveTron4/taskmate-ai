@@ -6,11 +6,31 @@ import session from "express-session";
 import { Strategy as GitHubStrategy } from "passport-github2";
 import { options, verify } from "./config/auth.js";
 import authRouter from "./routes/auth.js";
+import path from "path";
+import { fileURLToPath } from "url";
+
+import * as authRoutes from "./routes/auth.js";
+import * as toolsRoutes from "./routes/tools.js";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // create express app
 const app = express();
 
-// middleware
+// CORS middleware
+app.use(
+  cors({
+    origin: "http://localhost:5173",
+    methods: "GET,POST,PUT,DELETE,PATCH",
+    credentials: true,
+  })
+);
+
+// JSON middleware
+app.use(express.json());
+
+// Session middleware
 app.use(
   session({
     secret: "codepath",
@@ -34,17 +54,6 @@ passport.deserializeUser((user, done) => {
   done(null, user);
 });
 
-// CORS and JSON middleware
-app.use(express.json());
-app.use(
-  cors({
-    origin: "http://localhost:5173",
-    methods: "GET,POST,PUT,DELETE,PATCH",
-    credentials: true,
-  })
-);
-
-// routes
 // Auth routes
 app.use("/auth", authRouter);
 
@@ -56,6 +65,22 @@ app.get("/", (req, res) => {
       '<h1 style="text-align: center; margin-top: 50px;">TaskMate API</h1>'
     );
 });
+
+app.get("/api/auth/gmail/start", authRoutes.startGmailAuth);
+app.get("/api/auth/gcalendar/start", authRoutes.startGoogleCalendarAuth);
+app.get("/api/auth/gmeetings/start", authRoutes.startGoogleMeetingsAuth);
+app.post("/api/auth/canvas/start", authRoutes.startCanvasAuth);
+app.get("/api/auth/gmail/callback", authRoutes.gmailCallback);
+app.get("/api/auth/gcalendar/callback", authRoutes.googleCalendarCallback);
+app.get("/api/auth/gmeetings/callback", authRoutes.googleMeetingsCallback);
+app.get("/api/auth/gmeet/callback", authRoutes.googleMeetingsCallback);
+app.get("/api/auth/canvas/callback", authRoutes.canvasCallback);
+app.get("/api/auth/status", authRoutes.checkAuthStatus);
+app.post("/api/auth/gmail/unlink", authRoutes.unlinkGmail);
+
+app.get("/api/tools/count", toolsRoutes.getToolsCount);
+app.get("/api/tools/search", toolsRoutes.searchTools);
+app.get("/api/tools/canvas/search", toolsRoutes.searchCanvasTools);
 
 const PORT = process.env.PORT || 3001;
 

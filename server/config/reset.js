@@ -3,10 +3,11 @@ import "./dotenv.js";
 
 // Function to create the users table
 const createUsersTable = async () => {
-    const createTableQuery = `
+  const createTableQuery = `
         DROP TABLE IF EXISTS email_summaries CASCADE;
         DROP TABLE IF EXISTS tasks CASCADE;
         DROP TABLE IF EXISTS categories CASCADE;
+        DROP TABLE IF EXISTS composio_connections CASCADE;
         DROP TABLE IF EXISTS integrations CASCADE;
         DROP TABLE IF EXISTS identities CASCADE;
         DROP TABLE IF EXISTS users CASCADE;
@@ -25,18 +26,18 @@ const createUsersTable = async () => {
             last_login_at TIMESTAMPTZ
         );`;
 
-    try {
-        await pool.query(createTableQuery);
-        console.log("🎉 users table created successfully");
-    } catch (err) {
-        console.error("⚠️ error creating users table", err);
-        throw err;
-    }
+  try {
+    await pool.query(createTableQuery);
+    console.log("🎉 users table created successfully");
+  } catch (err) {
+    console.error("⚠️ error creating users table", err);
+    throw err;
+  }
 };
 
 // Function to create the trigger for updated_at
 const createTimestampTrigger = async () => {
-    const createTriggerQuery = `
+  const createTriggerQuery = `
         CREATE OR REPLACE FUNCTION trigger_set_timestamp()
         RETURNS TRIGGER AS $$
         BEGIN
@@ -50,18 +51,18 @@ const createTimestampTrigger = async () => {
             FOR EACH ROW
             EXECUTE FUNCTION trigger_set_timestamp();`;
 
-    try {
-        await pool.query(createTriggerQuery);
-        console.log("🎉 updated_at trigger created successfully");
-    } catch (err) {
-        console.error("⚠️ error creating trigger", err);
-        throw err;
-    }
+  try {
+    await pool.query(createTriggerQuery);
+    console.log("🎉 updated_at trigger created successfully");
+  } catch (err) {
+    console.error("⚠️ error creating trigger", err);
+    throw err;
+  }
 };
 
 // Function to create the identities table (OAuth providers)
 const createIdentitiesTable = async () => {
-    const createTableQuery = `
+  const createTableQuery = `
     CREATE TABLE identities (
         identity_id SERIAL PRIMARY KEY,
         user_id INTEGER NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
@@ -78,18 +79,18 @@ const createIdentitiesTable = async () => {
         UNIQUE (provider, provider_user_id)
     );`;
 
-    try {
-        await pool.query(createTableQuery);
-        console.log("🎉 identities table created successfully");
-    } catch (err) {
-        console.error("⚠️ error creating identities table", err);
-        throw err;
-    }
+  try {
+    await pool.query(createTableQuery);
+    console.log("🎉 identities table created successfully");
+  } catch (err) {
+    console.error("⚠️ error creating identities table", err);
+    throw err;
+  }
 };
 
 // Function to create the integrations table (connected services)
 const createIntegrationsTable = async () => {
-    const createTableQuery = `
+  const createTableQuery = `
     CREATE TABLE integrations (
         integration_id SERIAL PRIMARY KEY,
         user_id INTEGER NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
@@ -98,18 +99,40 @@ const createIntegrationsTable = async () => {
         last_synced_at TIMESTAMPTZ
     );`;
 
-    try {
-        await pool.query(createTableQuery);
-        console.log("🎉 integrations table created successfully");
-    } catch (err) {
-        console.error("⚠️ error creating integrations table", err);
-        throw err;
-    }
+  try {
+    await pool.query(createTableQuery);
+    console.log("🎉 integrations table created successfully");
+  } catch (err) {
+    console.error("⚠️ error creating integrations table", err);
+    throw err;
+  }
+};
+
+const createComposioConnectionsTable = async () => {
+  const createTableQuery = `
+    CREATE TABLE composio_connections (
+        connection_id SERIAL PRIMARY KEY,
+        user_id INTEGER NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+        composio_account_id VARCHAR(255) NOT NULL,
+        service_name VARCHAR(100) NOT NULL,
+        external_user_id VARCHAR(255) NOT NULL,
+        created_at TIMESTAMPTZ DEFAULT now(),
+        UNIQUE (composio_account_id),
+        UNIQUE (user_id, service_name)
+    );`;
+
+  try {
+    await pool.query(createTableQuery);
+    console.log("🎉 composio_connections table created successfully");
+  } catch (err) {
+    console.error("⚠️ error creating composio_connections table", err);
+    throw err;
+  }
 };
 
 // Function to create the categories table
 const createCategoriesTable = async () => {
-    const createTableQuery = `
+  const createTableQuery = `
     CREATE TABLE categories (
         category_id SERIAL PRIMARY KEY,
         user_id INTEGER NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
@@ -117,18 +140,18 @@ const createCategoriesTable = async () => {
         color VARCHAR(7)
     );`;
 
-    try {
-        await pool.query(createTableQuery);
-        console.log("🎉 categories table created successfully");
-    } catch (err) {
-        console.error("⚠️ error creating categories table", err);
-        throw err;
-    }
+  try {
+    await pool.query(createTableQuery);
+    console.log("🎉 categories table created successfully");
+  } catch (err) {
+    console.error("⚠️ error creating categories table", err);
+    throw err;
+  }
 };
 
 // Function to create the tasks table
 const createTasksTable = async () => {
-    const createTableQuery = `
+  const createTableQuery = `
     CREATE TABLE tasks (
         task_id SERIAL PRIMARY KEY,
         user_id INTEGER NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
@@ -142,18 +165,18 @@ const createTasksTable = async () => {
         source_id VARCHAR(255)
     );`;
 
-    try {
-        await pool.query(createTableQuery);
-        console.log("🎉 tasks table created successfully");
-    } catch (err) {
-        console.error("⚠️ error creating tasks table", err);
-        throw err;
-    }
+  try {
+    await pool.query(createTableQuery);
+    console.log("🎉 tasks table created successfully");
+  } catch (err) {
+    console.error("⚠️ error creating tasks table", err);
+    throw err;
+  }
 };
 
 // Function to create the email_summaries table
 const createEmailSummariesTable = async () => {
-    const createTableQuery = `
+  const createTableQuery = `
     CREATE TABLE email_summaries (
         email_id SERIAL PRIMARY KEY,
         user_id INTEGER NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
@@ -164,47 +187,53 @@ const createEmailSummariesTable = async () => {
         received_at TIMESTAMPTZ
     );`;
 
-    try {
-        await pool.query(createTableQuery);
-        console.log("🎉 email_summaries table created successfully");
-    } catch (err) {
-        console.error("⚠️ error creating email_summaries table", err);
-        throw err;
-    }
+  try {
+    await pool.query(createTableQuery);
+    console.log("🎉 email_summaries table created successfully");
+  } catch (err) {
+    console.error("⚠️ error creating email_summaries table", err);
+    throw err;
+  }
 };
 
 // Main function to run the database reset
 const reset = async () => {
-    try {
-        // Create tables in order (respecting foreign key dependencies)
-        await createUsersTable();
-        console.log("✅ users table ready");
-        
-        await createTimestampTrigger();
-        console.log("✅ timestamp trigger ready");
-        
-        await createIdentitiesTable();
-        console.log("✅ identities table ready");
-        
-        await createIntegrationsTable();
-        console.log("✅ integrations table ready");
-        
-        await createCategoriesTable();
-        console.log("✅ categories table ready");
-        
-        await createTasksTable();
-        console.log("✅ tasks table ready");
-        
-        await createEmailSummariesTable();
-        console.log("✅ email_summaries table ready");
-        
-        console.log("\n🎉 Database reset completed successfully!");
-        
-        pool.end(); // Close the connection pool
-    } catch (err) {
-        console.error("⚠️ An error occurred during the database reset process", err);
-        pool.end(); // Ensure pool is closed on error
-    }
+  try {
+    // Create tables in order (respecting foreign key dependencies)
+    await createUsersTable();
+    console.log("✅ users table ready");
+
+    await createTimestampTrigger();
+    console.log("✅ timestamp trigger ready");
+
+    await createIdentitiesTable();
+    console.log("✅ identities table ready");
+
+    await createIntegrationsTable();
+    console.log("✅ integrations table ready");
+
+    await createComposioConnectionsTable();
+    console.log("✅ composio_connections table ready");
+
+    await createCategoriesTable();
+    console.log("✅ categories table ready");
+
+    await createTasksTable();
+    console.log("✅ tasks table ready");
+
+    await createEmailSummariesTable();
+    console.log("✅ email_summaries table ready");
+
+    console.log("\n🎉 Database reset completed successfully!");
+
+    pool.end(); // Close the connection pool
+  } catch (err) {
+    console.error(
+      "⚠️ An error occurred during the database reset process",
+      err
+    );
+    pool.end(); // Ensure pool is closed on error
+  }
 };
 
 // Execute the reset function

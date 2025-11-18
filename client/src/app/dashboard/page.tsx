@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import Calendar from './components/Calendar'
+// @ts-ignore
+import Calendar from './components/Calendar.jsx'
 import Top from './components/Top'
 
 interface User {
@@ -58,9 +59,9 @@ function DashboardPage() {
     }
 
     return (
-        <div className="min-h-screen flex flex-col gap-2">
+        <div className="h-screen flex flex-col overflow-hidden bg-gray-50">
             <Top user={user} />
-            <div className="flex-1 p-6">
+            <div className="flex-1 overflow-hidden p-4 md:p-6">
                 <Calendar />
             </div>
         </div >

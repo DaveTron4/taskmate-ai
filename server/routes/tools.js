@@ -1,9 +1,16 @@
 import { composio, DEFAULT_EXTERNAL_USER_ID } from "../services/mcp.js";
+import { getComposioExternalUserId } from "./auth.js";
 
 // Check available tools count for each service
 export const getToolsCount = async (req, res) => {
   try {
-    const externalUserId = req.query.userId || DEFAULT_EXTERNAL_USER_ID;
+    // Use authenticated user's external ID if available, otherwise fall back to query param or default
+    let externalUserId;
+    if (req.user && req.user.user_id) {
+      externalUserId = await getComposioExternalUserId(req.user.user_id);
+    } else {
+      externalUserId = req.query.userId || DEFAULT_EXTERNAL_USER_ID;
+    }
 
     const gmailTools = await composio.tools.get(externalUserId, {
       toolkits: ["GMAIL"],
@@ -39,7 +46,13 @@ export const getToolsCount = async (req, res) => {
 export const searchTools = async (req, res) => {
   try {
     const { query, toolkit = "GMAIL", limit = 10 } = req.query;
-    const externalUserId = req.query.userId || DEFAULT_EXTERNAL_USER_ID;
+    // Use authenticated user's external ID if available, otherwise fall back to query param or default
+    let externalUserId;
+    if (req.user && req.user.user_id) {
+      externalUserId = await getComposioExternalUserId(req.user.user_id);
+    } else {
+      externalUserId = req.query.userId || DEFAULT_EXTERNAL_USER_ID;
+    }
 
     if (!query) {
       return res.status(400).json({
@@ -75,7 +88,13 @@ export const searchTools = async (req, res) => {
 export const searchCanvasTools = async (req, res) => {
   try {
     const { query, limit = 10 } = req.query;
-    const externalUserId = req.query.userId || DEFAULT_EXTERNAL_USER_ID;
+    // Use authenticated user's external ID if available, otherwise fall back to query param or default
+    let externalUserId;
+    if (req.user && req.user.user_id) {
+      externalUserId = await getComposioExternalUserId(req.user.user_id);
+    } else {
+      externalUserId = req.query.userId || DEFAULT_EXTERNAL_USER_ID;
+    }
 
     if (!query) {
       return res.status(400).json({

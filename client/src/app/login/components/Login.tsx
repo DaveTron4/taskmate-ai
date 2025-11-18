@@ -19,8 +19,9 @@ function Login() {
       if (response.ok) {
         const data = await response.json()
         if (data.success && data.user) {
-          // Redirect to dashboard if user is logged in
-          navigate('/dashboard', { replace: true })
+          // User is authenticated, redirect to Composio services page
+          navigate('/composio', { replace: true })
+          return
         }
       }
     } catch (error) {

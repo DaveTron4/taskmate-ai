@@ -1,0 +1,263 @@
+.mcp-login-container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle at top left, #eef2f3 0%, #dfe9f3 100%);
+  padding: 40px 20px;
+  font-family: Inter, system-ui, sans-serif;
+}
+
+.mcp-login-card {
+  width: 100%;
+  max-width: 600px;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 24px;
+  padding: 48px 40px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+  backdrop-filter: blur(16px);
+}
+
+.mcp-login-header {
+  margin-bottom: 32px;
+}
+
+.logo-and-title {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.decorative-logo {
+  width: 68px;
+  height: 68px;
+  flex-shrink: 0;
+}
+
+.title-text h1 {
+  font-size: 24px;
+  font-weight: 600;
+  color: #4a4a4a;
+  margin: 0;
+  line-height: 1.2;
+}
+
+.title-text h2 {
+  font-size: 32px;
+  font-weight: 700;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin: 0;
+  line-height: 1.2;
+}
+
+.subheader {
+  font-size: 15px;
+  color: #6b7280;
+  margin-top: 12px;
+  margin-bottom: 0;
+}
+
+.divider {
+  height: 1px;
+  background: linear-gradient(to right, transparent, #e5e7eb, transparent);
+  margin: 24px 0;
+}
+
+.micro-progress {
+  height: 2px;
+  background: #f3f4f6;
+  border-radius: 1px;
+  overflow: hidden;
+  margin-top: 16px;
+}
+
+.micro-progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, #667eea, #764ba2);
+  animation: progress 1.5s ease-in-out infinite;
+  width: 40%;
+}
+
+@keyframes progress {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(400%);
+  }
+}
+
+.connection-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.connect-row {
+  display: flex;
+  flex-direction: column;
+}
+
+.connect-btn {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 20px;
+  background: white;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 15px;
+  font-weight: 500;
+  color: #374151;
+  text-align: left;
+  width: 100%;
+  position: relative;
+}
+
+.connect-btn:hover:not(:disabled) {
+  border-color: #667eea;
+  background: #f8f9ff;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
+}
+
+.connect-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.connect-btn.is-connected {
+  background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+  border-color: #10b981;
+}
+
+.btn-icon {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-label {
+  flex: 1;
+  font-weight: 500;
+}
+
+.left-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid #e5e7eb;
+  border-top-color: #667eea;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin-right: auto;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.right-adornment {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.check {
+  color: #10b981;
+  font-weight: bold;
+  font-size: 18px;
+}
+
+.manage {
+  color: #10b981;
+  font-size: 14px;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.manage:hover {
+  text-decoration: underline;
+}
+
+.chevron {
+  color: #9ca3af;
+  font-size: 20px;
+  font-weight: 300;
+  flex-shrink: 0;
+}
+
+.inline-error {
+  margin-top: 8px;
+  padding: 12px 16px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  color: #991b1b;
+  font-size: 14px;
+}
+
+.retry-link {
+  background: none;
+  border: none;
+  color: #dc2626;
+  text-decoration: underline;
+  cursor: pointer;
+  font-size: inherit;
+  font-weight: 600;
+  padding: 0;
+  margin: 0;
+}
+
+.retry-link:hover {
+  color: #b91c1c;
+}
+
+.done-section {
+  margin-top: 40px;
+  text-align: center;
+  padding-bottom: 20px;
+}
+
+.primary-btn {
+  padding: 14px 42px;
+  font-size: 16px;
+  font-weight: 600;
+  background: linear-gradient(135deg, #4caf50 0%, #45a049 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 2px 8px rgba(76, 175, 80, 0.3);
+}
+
+.primary-btn:hover {
+  background: linear-gradient(135deg, #45a049 0%, #3d8b40 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(76, 175, 80, 0.4);
+}
+
+.primary-btn:active {
+  transform: translateY(0);
+}
+
+.bottom-section {
+  margin-top: 32px;
+}
+
+.footer-text {
+  text-align: center;
+  font-size: 13px;
+  color: #9ca3af;
+  margin-top: 16px;
+}

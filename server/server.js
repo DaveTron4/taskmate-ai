@@ -18,19 +18,7 @@ const __dirname = path.dirname(__filename);
 // create express app
 const app = express();
 
-// CORS middleware
-app.use(
-  cors({
-    origin: "http://localhost:5173",
-    methods: "GET,POST,PUT,DELETE,PATCH",
-    credentials: true,
-  })
-);
-
-// JSON middleware
-app.use(express.json());
-
-// Session middleware
+// middleware
 app.use(
   session({
     secret: "codepath",
@@ -54,6 +42,17 @@ passport.deserializeUser((user, done) => {
   done(null, user);
 });
 
+// CORS and JSON middleware
+app.use(express.json());
+app.use(
+  cors({
+    origin: "http://localhost:5173",
+    methods: "GET,POST,PUT,DELETE,PATCH",
+    credentials: true,
+  })
+);
+
+// routes
 // Auth routes
 app.use("/auth", authRouter);
 

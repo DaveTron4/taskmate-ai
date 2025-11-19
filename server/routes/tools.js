@@ -330,16 +330,9 @@ export const getCanvasAssignments = async (req, res) => {
 
     const externalUserId = await getComposioExternalUserId(req.user.user_id);
 
-    // Compute this week (Mon–Sun)
+    // Get current date for filtering out past assignments
     const now = new Date();
-    const dayOfWeek = now.getDay();
-    const diff = now.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1);
-    const weekStart = new Date(now.setDate(diff));
-    weekStart.setHours(0, 0, 0, 0);
-
-    const weekEnd = new Date(weekStart);
-    weekEnd.setDate(weekStart.getDate() + 7);
-    weekEnd.setHours(23, 59, 59, 999);
+    now.setHours(0, 0, 0, 0); // Start of today
 
     // 🔹 1) List courses directly, no tools.get on CANVAS
     const coursesResult = await composio.tools.execute("CANVAS_LIST_COURSES", {
@@ -365,8 +358,6 @@ export const getCanvasAssignments = async (req, res) => {
         assignments: [],
         message:
           "Canvas returned an error while listing courses. Check your Canvas connection in Composio.",
-        weekStart: weekStart.toISOString(),
-        weekEnd: weekEnd.toISOString(),
       });
     }
 
@@ -441,7 +432,8 @@ export const getCanvasAssignments = async (req, res) => {
           if (!dueDate) continue;
 
           const due = new Date(dueDate);
-          if (due >= weekStart && due <= weekEnd) {
+          // Only show assignments due today or in the future
+          if (due >= now) {
             // Get assignment URL - prefer html_url, otherwise construct it
             let assignmentUrl = assignment.html_url || assignment.url;
             if (
@@ -516,14 +508,12 @@ export const getCanvasAssignments = async (req, res) => {
     });
 
     console.log(
-      `[Canvas] Total assignments this week: ${allAssignments.length}`
+      `[Canvas] Total upcoming assignments: ${allAssignments.length}`
     );
 
     res.json({
       ok: true,
       assignments: assignmentsWithMetadata,
-      weekStart: weekStart.toISOString(),
-      weekEnd: weekEnd.toISOString(),
     });
   } catch (e) {
     console.error("Error fetching Canvas assignments:", e);
@@ -605,3 +595,4 @@ export const updateAssignmentMetadata = async (req, res) => {
     });
   }
 };
+

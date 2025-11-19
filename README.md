@@ -26,13 +26,13 @@ Backend: Express, PostgreSQL, Render, Composio
 
 ## Features
 
-### Task Prioritization
+### ✅ Task Prioritization
 
 Analyzes all imported tasks and deadlines using AI to suggest what to focus on next — helping students stay productive without feeling overwhelmed.
 
 [gif goes here]
 
-### Smart Schedule Dashboard
+### ✅ Smart Schedule Dashboard
 
 Displays all assignments and events in a clean, color-coded weekly view that updates in real time whenever new data is synced.
 
@@ -44,7 +44,7 @@ Proactively sends reminders for important deadlines, meetings, and unread priori
 
 [gif goes here]
 
-### Manual Task Management
+### ✅ Manual Task Management
 
 Allows students to add personal to-dos, edit existing tasks, or mark items as complete, keeping the dashboard accurate and reflecting all responsibilities.
 
@@ -62,7 +62,7 @@ Allows users to filter the task list and calendar view by category (e.g., "Schoo
 
 [gif goes here]
 
-### Integrate Composio
+### ✅ Integrate Composio
 Connect the application to third-party tools and APIs using the Composio platform.
 
 [gif goes here]
@@ -77,7 +77,7 @@ Prevent users from accidentally submitting a form or action multiple times by di
 
 [gif goes here]
 
-### Implement Spinners
+### ✅ Implement Spinners
 Display a loading spinner or indicator to show the user that data is being fetched or an action is processing.
 
 [gif goes here]
@@ -87,7 +87,7 @@ Allow users to log in or authenticate with the application using their existing 
 
 ![GitHub OAuth](./feature%20gifs/github_oauth.gif)
 
-### Validate Data - Backend
+### ✅ Validate Data - Backend
 Add server-side checks to ensure all data received from the client (e.g., in forms) is correct, complete, and secure before processing.
 
 [gif goes here]
@@ -102,7 +102,7 @@ Develop the core user interface interactions, such as clicking buttons, filling 
 
 [gif goes here]
 
-### Redirect - Frontend
+### ✅ Redirect - Frontend
 Automatically navigate the user to a different page after a specific action (e.g., redirecting to the dashboard after a successful login).
 
 [gif goes here]
@@ -112,7 +112,7 @@ Create a special backend function or endpoint to clear and reset the database to
 
 ![Dabase Reset](./feature%20gifs/database_reset.gif)
 
-### Implement Backend API - Backend
+### ✅ Implement Backend API - Backend
 Build the server-side API endpoints (e.g., GET, POST, PUT routes) that the frontend will use to create, read, update, and delete data.
 
 [gif goes here]
@@ -122,22 +122,22 @@ Configure and deploy the entire full-stack application (both frontend and backen
 
 [gif goes here]
 
-### Create Dynamic Routing - Frontend
+### ✅ Create Dynamic Routing - Frontend
 Set up client-side routing to handle dynamic URLs, such as viewing a specific item by its ID (e.g., `/tasks/123`).
 
 [gif goes here]
 
-### Create Dynamic Routing - Backend
+### ✅ Create Dynamic Routing - Backend
 Set up server-side API routes to handle dynamic parameters, like fetching data for a specific user or item (e.g., `/api/user/:id`).
 
 [gif goes here]
 
-### Set up React Frontend
+### ✅ Set up React Frontend
 Initialize and configure the basic file structure, dependencies, and boilerplate for the client-side application using the React library.
 
 [gif goes here]
 
-### Set up Express Backend
+### ✅ Set up Express Backend
 Initialize and configure the basic file structure, dependencies, and server setup for the backend API using the Express.js framework.
 
 [gif goes here]

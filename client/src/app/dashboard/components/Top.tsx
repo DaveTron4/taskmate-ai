@@ -1,5 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { useState, useRef, useEffect } from "react";
+import AddTaskModal from "./AddTaskModal";
 
 interface User {
     user_id: number;
@@ -15,6 +16,8 @@ interface TopProps {
 export default function Top({ user }: TopProps) {
     const navigate = useNavigate();
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+    const [isAddTaskModalOpen, setIsAddTaskModalOpen] = useState(false);
+    const [editingTask, setEditingTask] = useState<any>(null);
     const dropdownRef = useRef<HTMLDivElement>(null);
 
     const handleLogout = async () => {
@@ -29,8 +32,82 @@ export default function Top({ user }: TopProps) {
     };
 
     const handleAddTask = () => {
-        // TODO: Implement add task logic
+        setEditingTask(null);
+        setIsAddTaskModalOpen(true);
     };
+
+    const handleSaveTask = async (task: any) => {
+        try {
+            // Check if we're editing or creating
+            const isEditing = task.taskId;
+            const url = isEditing 
+                ? `http://localhost:3001/api/tasks/${task.taskId}`
+                : "http://localhost:3001/api/tasks";
+            const method = isEditing ? "PUT" : "POST";
+
+            const response = await fetch(url, {
+                method,
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                credentials: "include",
+                body: JSON.stringify(task),
+            });
+
+            const data = await response.json();
+            
+            if (data.ok) {
+                console.log(`Task ${isEditing ? 'updated' : 'saved'} successfully:`, data.task);
+                // Reload the page to fetch updated tasks
+                window.location.reload();
+            } else {
+                console.error(`Error ${isEditing ? 'updating' : 'saving'} task:`, data.error);
+                alert(`Failed to ${isEditing ? 'update' : 'save'} task: ` + data.error);
+            }
+        } catch (error) {
+            console.error("Error saving task:", error);
+            alert("Failed to save task. Please try again.");
+        }
+    };
+
+    const handleDeleteTask = async (taskId: string) => {
+        try {
+            const response = await fetch(`http://localhost:3001/api/tasks/${taskId}`, {
+                method: "DELETE",
+                credentials: "include",
+            });
+
+            const data = await response.json();
+            
+            if (data.ok) {
+                console.log("Task deleted successfully");
+                // Reload the page to fetch updated tasks
+                window.location.reload();
+            } else {
+                console.error("Error deleting task:", data.error);
+                alert("Failed to delete task: " + data.error);
+            }
+        } catch (error) {
+            console.error("Error deleting task:", error);
+            alert("Failed to delete task. Please try again.");
+        }
+    };
+
+    // Expose method to open edit modal
+    useEffect(() => {
+        console.log("Top component mounted, setting up global function");
+        (window as any).openEditTaskModal = (task: any) => {
+            console.log("Opening edit modal for task:", task);
+            setEditingTask(task);
+            setIsAddTaskModalOpen(true);
+        };
+        console.log("Global function set:", typeof (window as any).openEditTaskModal);
+        
+        return () => {
+            console.log("Top component unmounting, removing global function");
+            delete (window as any).openEditTaskModal;
+        };
+    }, []);
 
     // Close dropdown when clicking outside
     useEffect(() => {
@@ -98,6 +175,18 @@ export default function Top({ user }: TopProps) {
                     </div>
                 )}
             </div>
+
+            {/* Add Task Modal */}
+            <AddTaskModal
+                isOpen={isAddTaskModalOpen}
+                onClose={() => {
+                    setIsAddTaskModalOpen(false);
+                    setEditingTask(null);
+                }}
+                onSave={handleSaveTask}
+                onDelete={handleDeleteTask}
+                editTask={editingTask}
+            />
         </div>
     );
 }

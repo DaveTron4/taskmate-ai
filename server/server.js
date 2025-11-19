@@ -11,6 +11,7 @@ import { fileURLToPath } from "url";
 
 import * as authRoutes from "./routes/auth.js";
 import * as toolsRoutes from "./routes/tools.js";
+import * as tasksController from "./controllers/tasks.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -86,6 +87,13 @@ app.put(
   "/api/canvas/assignments/:assignmentId/metadata",
   toolsRoutes.updateAssignmentMetadata
 );
+
+// Task routes
+app.post("/api/tasks", tasksController.createTask);
+app.get("/api/tasks", tasksController.getTasks);
+app.get("/api/tasks/:taskId", tasksController.getTaskById);
+app.put("/api/tasks/:taskId", tasksController.updateTask);
+app.delete("/api/tasks/:taskId", tasksController.deleteTask);
 
 const PORT = process.env.PORT || 3001;
 

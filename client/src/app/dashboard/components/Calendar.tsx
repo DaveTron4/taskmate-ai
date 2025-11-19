@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   createCalendar,
   destroyCalendar,
@@ -39,6 +40,7 @@ export default function CalendarView({
   assignments,
   onReady,
 }: CalendarViewProps) {
+  const navigate = useNavigate();
   const containerRef = useRef<HTMLDivElement>(null);
   const calendarRef = useRef<any>(null);
   const readyCalledRef = useRef(false);
@@ -67,6 +69,9 @@ export default function CalendarView({
   useEffect(() => {
     if (!containerRef.current) return;
 
+    console.log(`[Calendar] Received ${calendarEvents?.length || 0} calendar events`);
+    console.log(`[Calendar] Received ${assignments?.length || 0} assignments`);
+
     const allEvents = [...(calendarEvents || [])].map(event => {
       // Use backend-provided category if available, otherwise detect from title
       const category: keyof typeof categories = event.category || event.extendedProps?.category || getCategoryForEvent(event.title);
@@ -90,7 +95,7 @@ export default function CalendarView({
         const endDate = new Date(dueDate.getTime() + 60 * 60 * 1000);
         // Use backend-provided category if available, otherwise default to school
         const category = assignment.category || "school";
-        console.log(`Assignment "${assignment.name}" categorized as "${category}" with color ${categories[category].color}`);
+        console.log(`Assignment "${assignment.name}" due on ${dueDate.toLocaleDateString()} categorized as "${category}"`);
 
         allEvents.push({
           id: `assignment-${assignment.id}`,
@@ -109,6 +114,8 @@ export default function CalendarView({
         });
       });
 
+    console.log(`[Calendar] Total events to display: ${allEvents.length}`);
+
     const newDataKey = `${calendarEvents?.length || 0}-${
       assignments?.length || 0
     }`;
@@ -121,11 +128,17 @@ export default function CalendarView({
 
     dataKeyRef.current = newDataKey;
 
-    if (calendarRef.current) {
-      destroyCalendar(calendarRef.current);
+    if (calendarRef.current && dataChanged) {
+      try {
+        destroyCalendar(calendarRef.current);
+        calendarRef.current = null;
+      } catch (e) {
+        console.warn("Calendar already destroyed:", e);
+      }
     }
 
-    calendarRef.current = createCalendar(containerRef.current, [TimeGrid], {
+    if (!calendarRef.current) {
+      calendarRef.current = createCalendar(containerRef.current, [TimeGrid], {
       view: "timeGridWeek",
       date: new Date(),
       events: allEvents,
@@ -157,19 +170,51 @@ export default function CalendarView({
       slotDuration: "00:30:00",
       slotMinTime: "08:00:00",
       slotMaxTime: "25:00:00",
+      scrollTime: "08:00:00",
       eventClick: (info: any) => {
-        if (
+        console.log("=== EVENT CLICKED ===");
+        console.log("Event ID:", info.event.id);
+        console.log("Event title:", info.event.title);
+        console.log("Event extendedProps:", info.event.extendedProps);
+        console.log("Event type:", info.event.extendedProps?.type);
+        
+        // Check if it's a manually created task (type === "task" OR assignment with no URL)
+        const isManualTask = info.event.extendedProps?.type === "task" || 
+                            (info.event.extendedProps?.type === "assignment" && !info.event.extendedProps?.url);
+        
+        if (isManualTask) {
+          console.log("✓ This is a manually created task, navigating to details page");
+          
+          // Extract task ID from the event
+          let taskId = info.event.id;
+          if (taskId.startsWith('assignment-task-')) {
+            taskId = taskId.replace('assignment-task-', '');
+          } else if (taskId.startsWith('task-')) {
+            taskId = taskId.replace('task-', '');
+          }
+          
+          console.log("Navigating to task:", taskId);
+          
+          // Navigate to task details page
+          navigate(`/tasks/${taskId}`);
+        } else if (
           info.event.extendedProps?.type === "assignment" &&
           info.event.extendedProps?.url
         ) {
+          console.log("✓ This is a Canvas assignment, opening URL");
           window.open(
             info.event.extendedProps.url,
             "_blank",
             "noopener,noreferrer"
           );
+        } else {
+          console.log("✗ Event type not recognized or no action defined");
+          console.log("To make this event editable, it needs extendedProps.type === 'task' or be an assignment with no URL");
         }
+        console.log("=== END EVENT CLICK ===");
       },
     });
+    }
 
     if (onReady && !readyCalledRef.current) {
       readyCalledRef.current = true;
@@ -180,7 +225,12 @@ export default function CalendarView({
 
     return () => {
       if (calendarRef.current) {
-        destroyCalendar(calendarRef.current);
+        try {
+          destroyCalendar(calendarRef.current);
+        } catch (e) {
+          console.warn("Calendar cleanup failed:", e);
+        }
+        calendarRef.current = null;
       }
     };
   }, [calendarEvents, assignments, onReady]);
@@ -189,17 +239,20 @@ export default function CalendarView({
     <div className="relative w-full h-full flex flex-col overflow-hidden">
       <div ref={containerRef} className="flex-1 w-full calendar-wrapper overflow-auto min-h-0" />
       <div className="pt-2 border-t border-gray-200 flex-shrink-0">
-        <div className="flex items-center gap-1 flex-wrap">
-          <span className="text-xs font-semibold text-slate-700">Categories:</span>
-          {Object.entries(categories).map(([key, category]) => (
-            <div key={key} className="flex items-center gap-0.5">
-              <div 
-                className="w-1.5 h-1.5 rounded-full" 
-                style={{ backgroundColor: category.color }}
-              />
-              <span className="text-xs text-slate-600">{category.name}</span>
-            </div>
-          ))}
+        <div className="flex items-center justify-between mb-1">
+          <div className="flex items-center gap-1 flex-wrap">
+            <span className="text-xs font-semibold text-slate-700">Categories:</span>
+            {Object.entries(categories).map(([key, category]) => (
+              <div key={key} className="flex items-center gap-0.5">
+                <div 
+                  className="w-1.5 h-1.5 rounded-full" 
+                  style={{ backgroundColor: category.color }}
+                />
+                <span className="text-xs text-slate-600">{category.name}</span>
+              </div>
+            ))}
+          </div>
+          <span className="text-xs text-slate-500">Use ← → to navigate weeks</span>
         </div>
       </div>
     </div>

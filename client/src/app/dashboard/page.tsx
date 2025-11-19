@@ -83,14 +83,19 @@ function DashboardPage() {
 
             setUser(userData.user)
 
-            const [calendarRes, assignmentsRes] = await Promise.all([
+            const [calendarRes, assignmentsRes, tasksRes] = await Promise.all([
                 fetch('http://localhost:3001/api/calendar/events', {
                     credentials: 'include'
                 }),
                 fetch('http://localhost:3001/api/canvas/assignments', {
                     credentials: 'include'
+                }),
+                fetch('http://localhost:3001/api/tasks', {
+                    credentials: 'include'
                 })
             ])
+
+            let allEvents: CalendarEvent[] = []
 
             if (calendarRes.ok) {
                 const calendarData = await calendarRes.json()
@@ -103,7 +108,7 @@ function DashboardPage() {
                             type: "calendar",
                         },
                     }))
-                    setCalendarEvents(events)
+                    allEvents = [...allEvents, ...events]
                 }
             }
 
@@ -125,6 +130,50 @@ function DashboardPage() {
                     setAssignments(normalized)
                 }
             }
+
+            // Add manually created tasks to calendar and task list
+            if (tasksRes.ok) {
+                const tasksData = await tasksRes.json()
+                if (tasksData?.ok && Array.isArray(tasksData.tasks)) {
+                    // Add tasks to calendar view
+                    const taskEvents = tasksData.tasks
+                        .filter((task: any) => task.due_date && !task.has_no_due_date)
+                        .map((task: any) => {
+                            const dueDate = new Date(task.due_date)
+                            return {
+                                id: `task-${task.task_id}`,
+                                title: task.title,
+                                start: dueDate,
+                                end: dueDate,
+                                allDay: !task.due_time,
+                                category: task.category,
+                                extendedProps: {
+                                    type: "task",
+                                    description: task.description,
+                                    priority: task.priority,
+                                },
+                            }
+                        })
+                    allEvents = [...allEvents, ...taskEvents]
+
+                    // Add tasks to task list
+                    const taskAssignments: Assignment[] = tasksData.tasks.map((task: any) => ({
+                        id: `task-${task.task_id}`,
+                        name: task.title,
+                        courseName: task.category.charAt(0).toUpperCase() + task.category.slice(1),
+                        dueDate: task.due_date || new Date().toISOString(),
+                        points: null,
+                        submitted: task.status === 'completed' ? new Date().toISOString() : null,
+                        url: null,
+                        priority: task.priority,
+                        estimatedHours: null,
+                        status: task.status === 'completed' ? 'done' : 'not_started',
+                    }))
+                    setAssignments(prev => [...prev, ...taskAssignments])
+                }
+            }
+
+            setCalendarEvents(allEvents)
         } catch (error) {
             console.error('Error fetching data:', error)
             navigate('/login', { replace: true })

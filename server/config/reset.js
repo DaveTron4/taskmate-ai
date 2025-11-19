@@ -156,15 +156,25 @@ const createTasksTable = async () => {
     CREATE TABLE tasks (
         task_id SERIAL PRIMARY KEY,
         user_id INTEGER NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
-        category_id INTEGER REFERENCES categories(category_id) ON DELETE SET NULL,
+        category VARCHAR(20) NOT NULL CHECK (category IN ('school', 'personal', 'work')),
         title VARCHAR(255) NOT NULL,
         description TEXT,
         due_date TIMESTAMPTZ,
-        status VARCHAR(20) DEFAULT 'pending',
-        priority VARCHAR(20) DEFAULT 'medium',
-        source VARCHAR(50),
-        source_id VARCHAR(255)
-    );`;
+        due_time TIME,
+        priority VARCHAR(10) NOT NULL CHECK (priority IN ('low', 'medium', 'high')),
+        status VARCHAR(20) DEFAULT 'pending' CHECK (status IN ('pending', 'completed', 'cancelled')),
+        has_no_due_date BOOLEAN DEFAULT FALSE,
+        synced_to_google BOOLEAN DEFAULT FALSE,
+        google_event_id VARCHAR(255),
+        source VARCHAR(50) DEFAULT 'manual',
+        source_id VARCHAR(255),
+        created_at TIMESTAMPTZ DEFAULT now(),
+        updated_at TIMESTAMPTZ DEFAULT now()
+    );
+    
+    CREATE INDEX idx_tasks_user_id ON tasks(user_id);
+    CREATE INDEX idx_tasks_due_date ON tasks(due_date);
+    CREATE INDEX idx_tasks_category ON tasks(category);`;
 
   try {
     await pool.query(createTableQuery);

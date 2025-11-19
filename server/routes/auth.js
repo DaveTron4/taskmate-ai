@@ -248,29 +248,62 @@ export const gmailCallback = async (req, res) => {
 
     if (status === "success" && connected_account_id) {
       try {
-        const connection = await composio.connectedAccounts.get(
-          connected_account_id
-        );
+        let extUserId = external_user_id;
+        let userId = null;
 
-        const extUserId =
-          external_user_id ||
-          connection.externalUserId ||
-          connection.external_user_id ||
-          connection.userId;
+        // external_user_id should always be in query params from the callback URL
+        if (!extUserId) {
+          console.warn("⚠️ No external_user_id in Gmail callback query params");
+        }
 
+        // Try to get connection details from Composio API (with timeout)
+        try {
+          const timeoutPromise = new Promise((_, reject) => {
+            setTimeout(() => reject(new Error("Timeout")), 5000);
+          });
+          const connection = await Promise.race([
+            composio.connectedAccounts.get(connected_account_id),
+            timeoutPromise,
+          ]);
+          extUserId =
+            extUserId ||
+            connection.externalUserId ||
+            connection.external_user_id ||
+            connection.userId;
+        } catch (apiError) {
+          console.warn(
+            "Could not fetch connection from Composio API, using query params:",
+            apiError.message
+          );
+        }
+
+        // Extract user_id from external_user_id (required for database)
         if (extUserId && extUserId.startsWith("user_")) {
-          const userId = parseInt(extUserId.replace("user_", ""));
+          userId = parseInt(extUserId.replace("user_", ""));
+        }
 
+        // Store the connection - user_id is required by database schema
+        if (connected_account_id && userId) {
           await pool.query(
             `INSERT INTO composio_connections (user_id, composio_account_id, service_name, external_user_id)
              VALUES ($1, $2, $3, $4)
              ON CONFLICT (composio_account_id) 
-             DO UPDATE SET user_id = EXCLUDED.user_id, service_name = EXCLUDED.service_name, external_user_id = EXCLUDED.external_user_id`,
-            [userId, connected_account_id, "gmail", extUserId]
+             DO UPDATE SET user_id = COALESCE(EXCLUDED.user_id, composio_connections.user_id), 
+                           service_name = EXCLUDED.service_name, 
+                           external_user_id = COALESCE(EXCLUDED.external_user_id, composio_connections.external_user_id)`,
+            [userId, connected_account_id, "gmail", extUserId || null]
+          );
+          console.log(
+            `✅ Gmail connection stored: user=${userId}, account=${connected_account_id}, extUserId=${extUserId}`
+          );
+        } else {
+          console.error(
+            `❌ Cannot store Gmail connection: missing userId (${userId}) or connected_account_id (${connected_account_id})`
           );
         }
       } catch (error) {
         console.error("Error in Gmail callback:", error);
+        // Don't fail the callback - still show success page
       }
 
       // Return HTML success page
@@ -996,18 +1029,41 @@ export const checkAuthStatus = async (req, res) => {
       }
     }
 
-    const gmailConns = userConnections.filter(
-      (c) => c.toolkit?.slug === "gmail"
-    );
-
-    // Check database directly for Gmail connections (in case Composio API is slow or fails)
+    // Check database FIRST for Gmail connections (more reliable than API)
     const gmailDbCheck = await pool.query(
       `SELECT composio_account_id FROM composio_connections WHERE user_id = $1 AND service_name = $2`,
       [userId, "gmail"]
     );
-    if (gmailDbCheck.rows.length > 0 && gmailConns.length === 0) {
-      // Connection exists in DB but not in Composio API yet - trust the DB
-      gmailConns.push({ id: gmailDbCheck.rows[0].composio_account_id });
+
+    console.log(
+      `🔍 Checking Gmail connections for user ${userId}: DB=${
+        gmailDbCheck.rows.length
+      }, API=${
+        userConnections.filter((c) => c.toolkit?.slug === "gmail").length
+      }`
+    );
+
+    const gmailConns = userConnections.filter(
+      (c) => c.toolkit?.slug === "gmail"
+    );
+
+    // If database has connection but API doesn't, trust the database
+    if (gmailDbCheck.rows.length > 0) {
+      const dbAccountIds = new Set(
+        gmailDbCheck.rows.map((r) => r.composio_account_id)
+      );
+      // Add any DB connections that aren't already in the API results
+      gmailDbCheck.rows.forEach((row) => {
+        if (!gmailConns.find((c) => c.id === row.composio_account_id)) {
+          gmailConns.push({
+            id: row.composio_account_id,
+            toolkit: { slug: "gmail" },
+          });
+        }
+      });
+      console.log(
+        `✅ Gmail connection found in DB: ${gmailDbCheck.rows.length} connection(s), total: ${gmailConns.length}`
+      );
     }
 
     const googleCalendarConns = userConnections.filter(

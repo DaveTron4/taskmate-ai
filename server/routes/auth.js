@@ -7,8 +7,6 @@ import { pool } from "../config/database.js";
 
 const router = express.Router();
 
-// GitHub authentication route
-// Login successful
 router.get("/login/success", (req, res) => {
   if (req.user) {
     res.status(200).json({ success: true, user: req.user });
@@ -17,12 +15,10 @@ router.get("/login/success", (req, res) => {
   }
 });
 
-// Login failed
 router.get("/login/failed", (req, res) => {
   res.status(401).json({ success: true, message: "failure" });
 });
 
-// Logout route
 router.get("/logout", (req, res, next) => {
   req.logout((err) => {
     if (err) {
@@ -37,7 +33,6 @@ router.get("/logout", (req, res, next) => {
   });
 });
 
-// GitHub authentication route
 router.get(
   "/github",
   passport.authenticate("github", {
@@ -45,7 +40,6 @@ router.get(
   })
 );
 
-// GitHub callback route
 router.get(
   "/github/callback",
   passport.authenticate("github", {
@@ -56,7 +50,6 @@ router.get(
 
 export default router;
 
-// Authentication middleware to ensure user is logged in
 export const requireAuth = (req, res, next) => {
   if (req.user && req.user.user_id) {
     return next();
@@ -64,10 +57,7 @@ export const requireAuth = (req, res, next) => {
   return res.status(401).json({ ok: false, error: "Authentication required" });
 };
 
-// Helper function to get or create external user ID for Composio
 export const getComposioExternalUserId = async (userId) => {
-  // Use user_id as the external user ID for Composio
-  // This ensures each GitHub user has their own isolated Composio connections
   return `user_${userId}`;
 };
 
@@ -103,7 +93,6 @@ export const startGmailAuth = async (req, res) => {
 
 export const startCanvasAuth = async (req, res) => {
   try {
-    // Require authentication
     if (!req.user || !req.user.user_id) {
       return res
         .status(401)
@@ -126,7 +115,6 @@ export const startCanvasAuth = async (req, res) => {
       }
     );
 
-    // Store Canvas connection immediately since it uses API key (no OAuth callback)
     if (resp.id) {
       try {
         await pool.query(
@@ -149,7 +137,6 @@ export const startCanvasAuth = async (req, res) => {
 
 export const startGoogleMeetingsAuth = async (req, res) => {
   try {
-    // Require authentication
     if (!req.user || !req.user.user_id) {
       return res
         .status(401)
@@ -188,7 +175,6 @@ export const startGoogleMeetingsAuth = async (req, res) => {
 
 export const startGoogleCalendarAuth = async (req, res) => {
   try {
-    // Require authentication
     if (!req.user || !req.user.user_id) {
       return res
         .status(401)
@@ -1002,8 +988,18 @@ export const checkAuthStatus = async (req, res) => {
     );
 
     const canvasConns = userConnections.filter(
-      (c) => c.toolkit?.slug === "canvas"
+      (c) => c.toolkit?.slug?.toLowerCase() === "canvas"
     );
+
+    // Also check database directly for Canvas connections (in case Composio API is slow)
+    const canvasDbCheck = await pool.query(
+      `SELECT composio_account_id FROM composio_connections WHERE user_id = $1 AND service_name = $2`,
+      [userId, "canvas"]
+    );
+    if (canvasDbCheck.rows.length > 0 && canvasConns.length === 0) {
+      // Connection exists in DB but not in Composio API yet - trust the DB
+      canvasConns.push({ id: canvasDbCheck.rows[0].composio_account_id });
+    }
 
     const googleMeetingsConns = userConnections.filter(
       (c) =>

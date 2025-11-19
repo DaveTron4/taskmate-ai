@@ -14,12 +14,12 @@
   --color-success: var(--color-success);
   --color-warning: var(--color-warning);
   --color-error: var(--color-error);
-  
+
   --color-bg: var(--color-bg);
   --color-surface: var(--color-surface);
   --color-surface-hover: var(--color-surface-hover);
   --color-border: var(--color-border);
-  
+
   --color-text: var(--color-text);
   --color-text-muted: var(--color-text-muted);
   --color-text-subtle: var(--color-text-subtle);
@@ -32,23 +32,23 @@
   --color-btn-primary: var(--btn-primary);
   --color-btn-primary-hover: var(--btn-primary-hover);
   --color-btn-primary-text: var(--btn-primary-text);
-  
+
   --color-btn-secondary: var(--btn-secondary);
   --color-btn-secondary-hover: var(--btn-secondary-hover);
   --color-btn-secondary-text: var(--btn-secondary-text);
-  
+
   --color-btn-success: var(--btn-success);
   --color-btn-success-hover: var(--btn-success-hover);
   --color-btn-success-text: var(--btn-success-text);
-  
+
   --color-btn-error: var(--btn-error);
   --color-btn-error-hover: var(--btn-error-hover);
   --color-btn-error-text: var(--btn-error-text);
-  
+
   --color-btn-github: var(--btn-github);
   --color-btn-github-hover: var(--btn-github-hover);
   --color-btn-github-text: var(--btn-github-text);
-  
+
   --color-btn-ghost: var(--btn-ghost);
   --color-btn-ghost-hover: var(--btn-ghost-hover);
   --color-btn-ghost-text: var(--btn-ghost-text);
@@ -59,7 +59,7 @@
   --color-card-bg-hover: var(--card-bg-hover);
   --color-card-border: var(--card-border);
   --color-card-border-hover: var(--card-border-hover);
-  
+
   /* Spacing */
   --spacing-xs: var(--spacing-xs);
   --spacing-sm: var(--spacing-sm);
@@ -109,13 +109,6 @@
   --transition-slow: var(--transition-slow);
 }
 
-/* Base styles */
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
 body {
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
@@ -124,4 +117,3 @@ body {
   min-height: 100vh;
   color: var(--color-text);
 }
-

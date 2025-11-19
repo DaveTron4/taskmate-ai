@@ -4,6 +4,7 @@ import "./dotenv.js";
 // Function to create the users table
 const createUsersTable = async () => {
   const createTableQuery = `
+        DROP TABLE IF EXISTS assignment_metadata CASCADE;
         DROP TABLE IF EXISTS email_summaries CASCADE;
         DROP TABLE IF EXISTS tasks CASCADE;
         DROP TABLE IF EXISTS categories CASCADE;
@@ -196,6 +197,30 @@ const createEmailSummariesTable = async () => {
   }
 };
 
+// Function to create the assignment_metadata table
+const createAssignmentMetadataTable = async () => {
+  const createTableQuery = `
+    CREATE TABLE assignment_metadata (
+        metadata_id SERIAL PRIMARY KEY,
+        user_id INTEGER NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+        assignment_id VARCHAR(255) NOT NULL,
+        priority VARCHAR(20) DEFAULT 'medium' CHECK (priority IN ('low', 'medium', 'high')),
+        estimated_hours NUMERIC(4,1),
+        status VARCHAR(20) DEFAULT 'not_started' CHECK (status IN ('not_started', 'in_progress', 'done')),
+        created_at TIMESTAMPTZ DEFAULT now(),
+        updated_at TIMESTAMPTZ DEFAULT now(),
+        UNIQUE (user_id, assignment_id)
+    );`;
+
+  try {
+    await pool.query(createTableQuery);
+    console.log("🎉 assignment_metadata table created successfully");
+  } catch (err) {
+    console.error("⚠️ error creating assignment_metadata table", err);
+    throw err;
+  }
+};
+
 // Main function to run the database reset
 const reset = async () => {
   try {
@@ -223,6 +248,9 @@ const reset = async () => {
 
     await createEmailSummariesTable();
     console.log("✅ email_summaries table ready");
+
+    await createAssignmentMetadataTable();
+    console.log("✅ assignment_metadata table ready");
 
     console.log("\n🎉 Database reset completed successfully!");
 

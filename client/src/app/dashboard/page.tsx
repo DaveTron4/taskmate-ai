@@ -1,8 +1,11 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { motion } from 'framer-motion'
 // @ts-ignore
 import Calendar from './components/Calendar.jsx'
 import Top from './components/Top'
+import Task from './components/Task'
+import Loader from '../loader'
 
 interface User {
     user_id: number
@@ -10,48 +13,120 @@ interface User {
     avatar_url: string
     email?: string
 }
+
+interface Assignment {
+    id: string | number
+    name: string
+    courseName: string
+    dueDate: string
+    points: number | null
+    submitted: string | null
+    url: string | null
+    priority: "low" | "medium" | "high"
+    estimatedHours: number | null
+    status: "not_started" | "in_progress" | "done"
+}
+
+interface CalendarEvent {
+    id: string
+    title: string
+    start: Date
+    end: Date
+    allDay?: boolean
+    backgroundColor?: string
+    borderColor?: string
+    extendedProps?: any
+}
+
 function DashboardPage() {
     const [user, setUser] = useState<User | null>(null)
-    const [loading, setLoading] = useState(true)
+    const [assignments, setAssignments] = useState<Assignment[]>([])
+    const [calendarEvents, setCalendarEvents] = useState<CalendarEvent[]>([])
+    const [bootstrapping, setBootstrapping] = useState(true)
+    const [dataLoaded, setDataLoaded] = useState(false)
+    const [calendarReady, setCalendarReady] = useState(false)
     const navigate = useNavigate()
 
     useEffect(() => {
-        checkLoginStatus()
+        fetchAllData()
     }, [])
 
-    const checkLoginStatus = async () => {
+    useEffect(() => {
+        if (dataLoaded && calendarReady) {
+            const timer = setTimeout(() => {
+                setBootstrapping(false)
+            }, 100)
+            return () => clearTimeout(timer)
+        }
+    }, [dataLoaded, calendarReady])
+
+    const fetchAllData = async () => {
         try {
-            const response = await fetch('http://localhost:3001/auth/login/success', {
+            const userRes = await fetch('http://localhost:3001/auth/login/success', {
                 credentials: 'include'
             })
 
-            if (response.ok) {
-                const data = await response.json()
-                if (data.success && data.user) {
-                    setUser(data.user)
-                } else {
-                    // Redirect to login if not authenticated
-                    navigate('/login', { replace: true })
-                }
-            } else {
+            if (!userRes.ok) {
                 navigate('/login', { replace: true })
+                return
+            }
+
+            const userData = await userRes.json()
+            if (!userData.success || !userData.user) {
+                navigate('/login', { replace: true })
+                return
+            }
+
+            setUser(userData.user)
+
+            const [calendarRes, assignmentsRes] = await Promise.all([
+                fetch('http://localhost:3001/api/calendar/events', {
+                    credentials: 'include'
+                }),
+                fetch('http://localhost:3001/api/canvas/assignments', {
+                    credentials: 'include'
+                })
+            ])
+
+            if (calendarRes.ok) {
+                const calendarData = await calendarRes.json()
+                if (calendarData?.ok && calendarData.events) {
+                    const events = calendarData.events.map((ev: any) => ({
+                        ...ev,
+                        start: new Date(ev.start),
+                        end: new Date(ev.end),
+                        extendedProps: {
+                            type: "calendar",
+                        },
+                    }))
+                    setCalendarEvents(events)
+                }
+            }
+
+            if (assignmentsRes.ok) {
+                const assignmentsData = await assignmentsRes.json()
+                if (assignmentsData?.ok && Array.isArray(assignmentsData.assignments)) {
+                    const normalized: Assignment[] = assignmentsData.assignments.map((raw: any) => ({
+                        id: raw.id,
+                        name: raw.name || raw.title || "Untitled Assignment",
+                        courseName: raw.courseName || raw.course_name || "Unknown Course",
+                        dueDate: raw.dueDate || raw.due_date || new Date().toISOString(),
+                        points: raw.points ?? null,
+                        submitted: raw.submitted ?? null,
+                        url: raw.url ?? null,
+                        priority: raw.priority ?? "medium",
+                        estimatedHours: typeof raw.estimatedHours === "number" ? raw.estimatedHours : null,
+                        status: raw.status ?? "not_started",
+                    }))
+                    setAssignments(normalized)
+                }
             }
         } catch (error) {
-            console.error('Error checking login status:', error)
+            console.error('Error fetching data:', error)
             navigate('/login', { replace: true })
         } finally {
-            setLoading(false)
+            setDataLoaded(true)
         }
-    }
-
-    if (loading) {
-        return (
-            <div className="flex justify-center items-center min-h-screen">
-                <div className="text-white text-xl">
-                    Loading...
-                </div>
-            </div>
-        )
     }
 
     if (!user) {
@@ -59,12 +134,35 @@ function DashboardPage() {
     }
 
     return (
-        <div className="h-screen flex flex-col overflow-hidden bg-gray-50">
-            <Top user={user} />
-            <div className="flex-1 overflow-hidden p-4 md:p-6">
-                <Calendar />
-            </div>
-        </div >
+        <>
+            {bootstrapping && <Loader />}
+            <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: bootstrapping ? 0 : 1 }}
+                transition={{ duration: 0.5, ease: "easeOut" }}
+                className="min-h-screen flex flex-col bg-gray-50"
+            >
+                <Top user={user} />
+                <div className="flex-1 px-2 md:px-3 pt-2 md:pt-3 pb-4 md:pb-6">
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-2 md:gap-3">
+                        <div className="lg:col-span-2">
+                            <div className="rounded-xl bg-white shadow-lg border border-gray-200 p-2 md:p-3">
+                                <Calendar
+                                    events={calendarEvents}
+                                    assignments={assignments}
+                                    onReady={() => setCalendarReady(true)}
+                                />
+                            </div>
+                        </div>
+                        <div className="flex flex-col">
+                            <div className="flex flex-col rounded-xl bg-white shadow-lg border border-gray-200 p-2 md:p-3">
+                                <Task />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </motion.div>
+        </>
     )
 }
 export default DashboardPage

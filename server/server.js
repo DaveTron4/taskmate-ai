@@ -80,6 +80,12 @@ app.post("/api/auth/gmail/unlink", authRoutes.unlinkGmail);
 app.get("/api/tools/count", toolsRoutes.getToolsCount);
 app.get("/api/tools/search", toolsRoutes.searchTools);
 app.get("/api/tools/canvas/search", toolsRoutes.searchCanvasTools);
+app.get("/api/calendar/events", toolsRoutes.getCalendarEvents);
+app.get("/api/canvas/assignments", toolsRoutes.getCanvasAssignments);
+app.put(
+  "/api/canvas/assignments/:assignmentId/metadata",
+  toolsRoutes.updateAssignmentMetadata
+);
 
 const PORT = process.env.PORT || 3001;
 

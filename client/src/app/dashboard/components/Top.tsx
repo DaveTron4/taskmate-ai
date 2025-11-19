@@ -1,68 +1,63 @@
-import { useNavigate } from 'react-router-dom'
+import { useNavigate } from "react-router-dom";
 
 interface User {
-    user_id: number
-    username: string
-    avatar_url: string
-    email?: string
+    user_id: number;
+    username: string;
+    avatar_url: string;
+    email?: string;
 }
 
 interface TopProps {
-    user: User
+    user: User;
 }
 
-function Top({ user }: TopProps) {
-    const navigate = useNavigate()
+export default function Top({ user }: TopProps) {
+    const navigate = useNavigate();
 
     const handleLogout = async () => {
         try {
-            await fetch('http://localhost:3001/auth/logout', {
-                credentials: 'include'
-            })
-            navigate('/login', { replace: true })
+            await fetch("http://localhost:3001/auth/logout", {
+                credentials: "include",
+            });
+            navigate("/login", { replace: true });
         } catch (error) {
-            console.error('error logging out')
+            console.error("error logging out");
         }
-    }
+    };
 
     return (
-        <div className="flex items-start justify-between w-full bg-white p-6 shadow-sm">
+        <div className="flex items-center justify-between w-full bg-white px-5 py-3 shadow-sm border-b border-slate-200">
 
-            {/* LEFT SIDE */}
-            <div>
-                <h1 className="text-3xl font-bold text-slate-900">
-                    Welcome back, {user.username}!
+            {/* LEFT */}
+            <div className="flex flex-col leading-tight">
+                <h1 className="text-xl font-semibold text-slate-900">
+                    Welcome back, {user.username}
                 </h1>
-                <p className="text-slate-600 text-sm">
-                    Manage your tasks, schedule, and email summaries.
+                <p className="text-xs text-slate-500">
+                    Manage your tasks, schedule, and email summaries
                 </p>
             </div>
 
-            {/* RIGHT SIDE */}
-            <div className="flex flex-col items-center gap-0.5">
+            {/* RIGHT */}
+            <div className="flex items-center gap-3">
 
                 {/* Avatar */}
-                <div className="p-2 rounded-full bg-white shadow-sm border border-slate-200">
+                <div className="p-0.5 rounded-full bg-white shadow-sm border border-slate-200">
                     <img
                         src={user.avatar_url}
                         alt={user.username}
-                        className="h-4 w-4 rounded-full object-cover"
+                        className="h-3 w-3 rounded-full object-cover"
                     />
                 </div>
 
                 {/* Logout */}
                 <button
                     onClick={handleLogout}
-                    className="rounded-md bg-rose-500 px-4 py-1.5 text-sm font-semibold text-white shadow-sm hover:bg-rose-600 transition"
+                    className="rounded-md bg-rose-500 px-3 py-1 text-xs font-medium text-white shadow-sm hover:bg-rose-600 transition"
                 >
                     Logout
                 </button>
-
             </div>
         </div>
-    )
-
+    );
 }
-
-export default Top
-

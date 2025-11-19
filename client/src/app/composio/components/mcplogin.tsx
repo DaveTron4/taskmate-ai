@@ -86,26 +86,19 @@ export default function MCPLogin({ onComplete }: { onComplete?: () => void }) {
             });
             const data = await res.json();
             if (data?.ok) {
-                // Canvas uses API key, so check immediately
-                const status = await checkConnectionStatus();
-                if (status?.canvas) {
-                    setCanvasState("connected");
-                } else {
-                    // If not connected, poll for a bit
-                    let attempts = 0;
-                    const checkInterval = setInterval(async () => {
-                        attempts++;
-                        const status = await checkConnectionStatus();
-                        if (attempts >= 10 || status?.canvas) {
-                            clearInterval(checkInterval);
-                            if (status?.canvas) {
-                                setCanvasState("connected");
-                            } else if (attempts >= 10) {
-                                setCanvasState("error");
-                            }
-                        }
-                    }, 1000);
-                }
+                let attempts = 0;
+                const maxAttempts = 15;
+                const checkInterval = setInterval(async () => {
+                    attempts++;
+                    const status = await checkConnectionStatus();
+                    if (status?.canvas) {
+                        clearInterval(checkInterval);
+                        setCanvasState("connected");
+                    } else if (attempts >= maxAttempts) {
+                        clearInterval(checkInterval);
+                        setCanvasState("error");
+                    }
+                }, 2000);
             } else {
                 console.error('Canvas auth failed:', data);
                 const errorMsg = data?.error || 'Unknown error';
@@ -219,13 +212,16 @@ export default function MCPLogin({ onComplete }: { onComplete?: () => void }) {
                     if (status.googlemeetings && meetingsState === "connecting") {
                         setMeetingsState("connected");
                     }
+                    if (status.canvas && canvasState === "connecting") {
+                        setCanvasState("connected");
+                    }
                 }
             }, 1000);
         };
 
         window.addEventListener('focus', handleFocus);
         return () => window.removeEventListener('focus', handleFocus);
-    }, [googleState, calendarState, meetingsState]);
+    }, [googleState, calendarState, meetingsState, canvasState]);
 
     useEffect(() => {
         if (connectionStatus.loading) return;

@@ -90,6 +90,7 @@ app.put(
   "/api/canvas/assignments/:assignmentId/metadata",
   toolsRoutes.updateAssignmentMetadata
 );
+app.get("/api/gmail/emails", toolsRoutes.getGmailEmails);
 
 // Task routes
 app.post("/api/tasks", tasksController.createTask);
@@ -101,7 +102,7 @@ app.delete("/api/tasks/:taskId", tasksController.deleteTask);
 // Serve React app for all other routes (must be last)
 // Use a regex pattern to match all routes that don't start with /api or /auth
 app.use((req, res, next) => {
-  if (!req.path.startsWith('/api') && !req.path.startsWith('/auth')) {
+  if (!req.path.startsWith("/api") && !req.path.startsWith("/auth")) {
     res.sendFile(path.join(__dirname, "../client/dist/index.html"));
   } else {
     next();

@@ -1,4 +1,8 @@
-import { composio, DEFAULT_EXTERNAL_USER_ID } from "../services/mcp.js";
+import {
+  composio,
+  DEFAULT_EXTERNAL_USER_ID,
+  anthropic,
+} from "../services/mcp.js";
 import { getComposioExternalUserId } from "./auth.js";
 import { config } from "../config/index.js";
 import { pool } from "../config/database.js";
@@ -268,17 +272,25 @@ export const getCalendarEvents = async (req, res) => {
     // Helper function to categorize events
     const categorizeEvent = (title) => {
       const lowerTitle = (title || "").toLowerCase();
-      
+
       // School-related keywords
-      if (lowerTitle.match(/\b(class|lecture|exam|quiz|homework|assignment|study|school|university|college|cs\s|math|physics|chemistry|biology|lab|seminar|tutorial|project|presentation|essay)\b/)) {
+      if (
+        lowerTitle.match(
+          /\b(class|lecture|exam|quiz|homework|assignment|study|school|university|college|cs\s|math|physics|chemistry|biology|lab|seminar|tutorial|project|presentation|essay)\b/
+        )
+      ) {
         return "school"; // Purple
       }
-      
+
       // Work-related keywords
-      if (lowerTitle.match(/\b(work|meeting|shift|standup|scrum|sprint|client|deadline|conference|interview|office|team|project meeting|1:1|one-on-one|sync)\b/)) {
+      if (
+        lowerTitle.match(
+          /\b(work|meeting|shift|standup|scrum|sprint|client|deadline|conference|interview|office|team|project meeting|1:1|one-on-one|sync)\b/
+        )
+      ) {
         return "work"; // Cyan
       }
-      
+
       // Default to personal
       return "personal"; // Orange
     };
@@ -596,3 +608,267 @@ export const updateAssignmentMetadata = async (req, res) => {
   }
 };
 
+// Get Gmail sent emails with AI analysis
+export const getGmailEmails = async (req, res) => {
+  try {
+    if (!req.user || !req.user.user_id) {
+      return res
+        .status(401)
+        .json({ ok: false, error: "Authentication required" });
+    }
+
+    const externalUserId = await getComposioExternalUserId(req.user.user_id);
+
+    // Get Gmail tools
+    const gmailTools = await composio.tools.get(externalUserId, {
+      toolkits: ["GMAIL"],
+      limit: 100,
+    });
+
+    // Find the list messages tool
+    let listMessagesTool = gmailTools.find(
+      (tool) =>
+        tool.name === "GMAIL_LIST_MESSAGES" ||
+        tool.name === "GMAIL_LIST_SENT_MESSAGES" ||
+        (tool.name.toLowerCase().includes("list") &&
+          tool.name.toLowerCase().includes("message"))
+    );
+
+    if (!listMessagesTool) {
+      // Search for it
+      const searchResults = await composio.tools.get(externalUserId, {
+        toolkits: ["GMAIL"],
+        search: "list sent messages",
+        limit: 50,
+      });
+      listMessagesTool = searchResults.find(
+        (tool) =>
+          tool.name === "GMAIL_LIST_MESSAGES" ||
+          tool.name === "GMAIL_LIST_SENT_MESSAGES" ||
+          (tool.name.toLowerCase().includes("list") &&
+            tool.name.toLowerCase().includes("message"))
+      );
+    }
+
+    if (!listMessagesTool) {
+      return res.json({
+        ok: true,
+        emails: [],
+        message: "Gmail list messages tool not found",
+      });
+    }
+
+    // Fetch sent messages (last 10)
+    let messagesResult;
+    try {
+      messagesResult = await composio.tools.execute(listMessagesTool.name, {
+        userId: externalUserId,
+        arguments: {
+          query: "in:sent",
+          maxResults: 10,
+        },
+      });
+    } catch (executeError) {
+      console.error("Error executing Gmail list messages:", executeError);
+      // Try alternative approach - get messages directly
+      try {
+        messagesResult = await composio.tools.execute("GMAIL_LIST_MESSAGES", {
+          userId: externalUserId,
+          arguments: {
+            query: "in:sent",
+            maxResults: 10,
+          },
+        });
+      } catch (altError) {
+        console.error("Alternative Gmail fetch also failed:", altError);
+        return res.json({
+          ok: true,
+          emails: [],
+          message: "Could not fetch Gmail messages",
+        });
+      }
+    }
+
+    // Extract messages from result
+    let messages = [];
+    if (messagesResult?.data?.messages) {
+      messages = messagesResult.data.messages;
+    } else if (messagesResult?.messages) {
+      messages = messagesResult.messages;
+    } else if (Array.isArray(messagesResult)) {
+      messages = messagesResult;
+    } else if (messagesResult?.data && Array.isArray(messagesResult.data)) {
+      messages = messagesResult.data;
+    }
+
+    if (messages.length === 0) {
+      return res.json({
+        ok: true,
+        emails: [],
+        message: "No sent emails found",
+      });
+    }
+
+    // Get full message details for each message
+    const emailPromises = messages.slice(0, 10).map(async (message) => {
+      try {
+        // Get the get message tool
+        let getMessageTool = gmailTools.find(
+          (tool) =>
+            tool.name === "GMAIL_GET_MESSAGE" ||
+            tool.name === "GMAIL_READ_MESSAGE" ||
+            (tool.name.toLowerCase().includes("get") &&
+              tool.name.toLowerCase().includes("message"))
+        );
+
+        if (!getMessageTool) {
+          const searchResults = await composio.tools.get(externalUserId, {
+            toolkits: ["GMAIL"],
+            search: "get message",
+            limit: 20,
+          });
+          getMessageTool = searchResults.find(
+            (tool) =>
+              tool.name === "GMAIL_GET_MESSAGE" ||
+              tool.name === "GMAIL_READ_MESSAGE"
+          );
+        }
+
+        if (!getMessageTool) {
+          return null;
+        }
+
+        const messageId = message.id || message.messageId || message.message_id;
+        if (!messageId) return null;
+
+        const messageResult = await composio.tools.execute(
+          getMessageTool.name,
+          {
+            userId: externalUserId,
+            arguments: {
+              messageId: messageId,
+              format: "full",
+            },
+          }
+        );
+
+        // Extract message data
+        const messageData =
+          messageResult?.data || messageResult?.payload || messageResult;
+        const headers = messageData?.headers || [];
+        const getHeader = (name) => {
+          const header = headers.find((h) => h.name === name);
+          return header?.value || "";
+        };
+
+        const subject = getHeader("Subject") || "No Subject";
+        const to = getHeader("To") || "Unknown";
+        const date = getHeader("Date") || new Date().toISOString();
+        const body =
+          messageData?.body?.data ||
+          messageData?.snippet ||
+          messageData?.body?.textPlain ||
+          "";
+
+        // Use Claude to analyze the email
+        const analysisPrompt = `Analyze this email and provide:
+1. A brief summary (2-3 sentences max)
+2. Priority level: "important" or "normal"
+3. Category: "Academic", "Career", "Personal", or "Other"
+
+Email details:
+Subject: ${subject}
+To: ${to}
+Body: ${body.substring(0, 1000)}
+
+Respond in JSON format:
+{
+  "summary": "brief summary here",
+  "priority": "important" or "normal",
+  "category": "Academic" or "Career" or "Personal" or "Other"
+}`;
+
+        let analysis = {
+          summary: body.substring(0, 150) + "...",
+          priority: "normal",
+          category: "Other",
+        };
+
+        try {
+          const claudeResponse = await anthropic.messages.create({
+            model: "claude-3-5-sonnet-20241022",
+            max_tokens: 500,
+            messages: [
+              {
+                role: "user",
+                content: analysisPrompt,
+              },
+            ],
+          });
+
+          const content = claudeResponse.content[0];
+          if (content.type === "text") {
+            const text = content.text;
+            // Try to extract JSON from the response
+            const jsonMatch = text.match(/\{[\s\S]*\}/);
+            if (jsonMatch) {
+              analysis = JSON.parse(jsonMatch[0]);
+            }
+          }
+        } catch (claudeError) {
+          console.error("Error analyzing email with Claude:", claudeError);
+          // Use fallback analysis
+        }
+
+        // Format timestamp
+        const emailDate = new Date(date);
+        const now = new Date();
+        const diffMs = now - emailDate;
+        const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+        const diffDays = Math.floor(diffHours / 24);
+
+        let timestamp = "";
+        if (diffHours < 1) {
+          timestamp = "Just now";
+        } else if (diffHours < 24) {
+          timestamp = `${diffHours}h ago`;
+        } else if (diffDays === 1) {
+          timestamp = "1d ago";
+        } else if (diffDays < 7) {
+          timestamp = `${diffDays}d ago`;
+        } else {
+          timestamp = emailDate.toLocaleDateString();
+        }
+
+        return {
+          id: messageId,
+          sender: to.split(",")[0].trim(), // First recipient
+          subject: subject,
+          summary: analysis.summary,
+          timestamp: timestamp,
+          priority: analysis.priority,
+          category: analysis.category,
+        };
+      } catch (error) {
+        console.error("Error processing email:", error);
+        return null;
+      }
+    });
+
+    const emails = (await Promise.all(emailPromises)).filter(
+      (email) => email !== null
+    );
+
+    res.json({
+      ok: true,
+      emails: emails,
+    });
+  } catch (e) {
+    console.error("Error fetching Gmail emails:", e);
+    res.status(500).json({
+      ok: false,
+      error: String(e),
+      message: e.message,
+    });
+  }
+};

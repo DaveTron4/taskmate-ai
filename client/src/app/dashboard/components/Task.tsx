@@ -61,20 +61,7 @@ export default function TasksUI() {
         });
 
     return (
-        <>
-            {/* Header */}
-            <div className="mb-4 flex items-center justify-between">
-                <div>
-                    <h2 className="text-lg font-semibold text-slate-900">What's Next</h2>
-                    <p className="text-xs text-slate-500 mt-0.5">AI-prioritized tasks</p>
-                </div>
-                <span className="text-[10px] font-medium text-slate-400">
-                    {tasks.length} due soon
-                </span>
-            </div>
-
-            {/* List */}
-            <div className="space-y-3">
+        <div className="space-y-3">
                 {tasks.map((task) => (
                     <div key={task.id} className="flex items-stretch">
 
@@ -109,7 +96,7 @@ export default function TasksUI() {
 
                             {/* Right side */}
                             <span
-                                className={`px-2.5 py-1 lg:px-2 lg:py-0.5 rounded-full text-[11px] lg:text-[10px] font-semibold lg:mt-2 lg:self-start ${priorityPillColors[task.priority]}`}
+                                className={`px-1 py-1 lg:px-2 lg:py-0.5 rounded-full text-[11px] lg:text-[10px] font-semibold lg:mt-2 lg:self-start ${priorityPillColors[task.priority]}`}
                             >
                                 {task.priority === "high"
                                     ? "High"
@@ -121,6 +108,5 @@ export default function TasksUI() {
                     </div>
                 ))}
             </div>
-        </>
     );
 }

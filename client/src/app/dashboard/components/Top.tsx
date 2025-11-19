@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { useState, useRef, useEffect } from "react";
 import AddTaskModal from "./AddTaskModal";
+import { useToast } from "../../../components/ToastProvider";
 
 interface User {
     user_id: number;
@@ -15,6 +16,7 @@ interface TopProps {
 
 export default function Top({ user }: TopProps) {
     const navigate = useNavigate();
+    const { addToast } = useToast();
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const [isAddTaskModalOpen, setIsAddTaskModalOpen] = useState(false);
     const [editingTask, setEditingTask] = useState<any>(null);
@@ -22,7 +24,7 @@ export default function Top({ user }: TopProps) {
 
     const handleLogout = async () => {
         try {
-            await fetch("http://localhost:3001/auth/logout", {
+            await fetch("https://taskmate-ai-ef8u.onrender.com/auth/logout", {
                 credentials: "include",
             });
             navigate("/login", { replace: true });
@@ -41,8 +43,8 @@ export default function Top({ user }: TopProps) {
             // Check if we're editing or creating
             const isEditing = task.taskId;
             const url = isEditing 
-                ? `http://localhost:3001/api/tasks/${task.taskId}`
-                : "http://localhost:3001/api/tasks";
+                ? `https://taskmate-ai-ef8u.onrender.com/api/tasks/${task.taskId}`
+                : "https://taskmate-ai-ef8u.onrender.com/api/tasks";
             const method = isEditing ? "PUT" : "POST";
 
             const response = await fetch(url, {
@@ -58,21 +60,34 @@ export default function Top({ user }: TopProps) {
             
             if (data.ok) {
                 console.log(`Task ${isEditing ? 'updated' : 'saved'} successfully:`, data.task);
+                addToast(
+                    `Task ${isEditing ? 'updated' : 'created'} successfully`,
+                    'success',
+                    `"${task.title}" has been ${isEditing ? 'updated' : 'added to your task list'}.`
+                );
                 // Reload the page to fetch updated tasks
-                window.location.reload();
+                setTimeout(() => window.location.reload(), 1000);
             } else {
                 console.error(`Error ${isEditing ? 'updating' : 'saving'} task:`, data.error);
-                alert(`Failed to ${isEditing ? 'update' : 'save'} task: ` + data.error);
+                addToast(
+                    `Failed to ${isEditing ? 'update' : 'create'} task`,
+                    'danger',
+                    data.error
+                );
             }
         } catch (error) {
             console.error("Error saving task:", error);
-            alert("Failed to save task. Please try again.");
+            addToast(
+                'Error saving task',
+                'danger',
+                'An unexpected error occurred. Please try again.'
+            );
         }
     };
 
     const handleDeleteTask = async (taskId: string) => {
         try {
-            const response = await fetch(`http://localhost:3001/api/tasks/${taskId}`, {
+            const response = await fetch(`https://taskmate-ai-ef8u.onrender.com/api/tasks/${taskId}`, {
                 method: "DELETE",
                 credentials: "include",
             });
@@ -81,15 +96,28 @@ export default function Top({ user }: TopProps) {
             
             if (data.ok) {
                 console.log("Task deleted successfully");
+                addToast(
+                    'Task deleted successfully',
+                    'success',
+                    'The task has been removed from your list.'
+                );
                 // Reload the page to fetch updated tasks
-                window.location.reload();
+                setTimeout(() => window.location.reload(), 1000);
             } else {
                 console.error("Error deleting task:", data.error);
-                alert("Failed to delete task: " + data.error);
+                addToast(
+                    'Failed to delete task',
+                    'danger',
+                    data.error
+                );
             }
         } catch (error) {
             console.error("Error deleting task:", error);
-            alert("Failed to delete task. Please try again.");
+            addToast(
+                'Error deleting task',
+                'danger',
+                'An unexpected error occurred. Please try again.'
+            );
         }
     };
 

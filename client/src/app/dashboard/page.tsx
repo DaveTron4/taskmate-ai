@@ -66,7 +66,7 @@ function DashboardPage() {
 
     const fetchAllData = async () => {
         try {
-            const userRes = await fetch('http://localhost:3001/auth/login/success', {
+            const userRes = await fetch('https://taskmate-ai-ef8u.onrender.com/auth/login/success', {
                 credentials: 'include'
             })
 
@@ -84,13 +84,13 @@ function DashboardPage() {
             setUser(userData.user)
 
             const [calendarRes, assignmentsRes, tasksRes] = await Promise.all([
-                fetch('http://localhost:3001/api/calendar/events', {
+                fetch('https://taskmate-ai-ef8u.onrender.com/api/calendar/events', {
                     credentials: 'include'
                 }),
-                fetch('http://localhost:3001/api/canvas/assignments', {
+                fetch('https://taskmate-ai-ef8u.onrender.com/api/canvas/assignments', {
                     credentials: 'include'
                 }),
-                fetch('http://localhost:3001/api/tasks', {
+                fetch('https://taskmate-ai-ef8u.onrender.com/api/tasks', {
                     credentials: 'include'
                 })
             ])

@@ -5,6 +5,7 @@ import { ArrowLeft, Calendar, Clock, Tag, CheckCircle2, Edit, Trash2 } from 'luc
 import SideBar from '../dashboard/components/SideBar'
 import Settings from '../dashboard/components/Settings'
 import Loader from '../loader'
+import { useToast } from '../../components/ToastProvider'
 
 interface User {
     user_id: number
@@ -33,6 +34,7 @@ interface Task {
 function TaskDetailsPage() {
     const { id } = useParams<{ id: string }>()
     const navigate = useNavigate()
+    const { addToast } = useToast()
     const [user, setUser] = useState<User | null>(null)
     const [task, setTask] = useState<Task | null>(null)
     const [loading, setLoading] = useState(true)
@@ -54,7 +56,7 @@ function TaskDetailsPage() {
 
     const fetchData = async () => {
         try {
-            const userRes = await fetch('http://localhost:3001/auth/login/success', {
+            const userRes = await fetch('https://taskmate-ai-ef8u.onrender.com/auth/login/success', {
                 credentials: 'include'
             })
 
@@ -72,7 +74,7 @@ function TaskDetailsPage() {
             setUser(userData.user)
 
             // Fetch task details
-            const taskRes = await fetch(`http://localhost:3001/api/tasks/${id}`, {
+            const taskRes = await fetch(`https://taskmate-ai-ef8u.onrender.com/api/tasks/${id}`, {
                 credentials: 'include'
             })
 
@@ -105,7 +107,7 @@ function TaskDetailsPage() {
 
     const handleUpdate = async () => {
         try {
-            const response = await fetch(`http://localhost:3001/api/tasks/${id}`, {
+            const response = await fetch(`https://taskmate-ai-ef8u.onrender.com/api/tasks/${id}`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
@@ -119,13 +121,26 @@ function TaskDetailsPage() {
             if (data.ok) {
                 setTask(data.task)
                 setIsEditing(false)
+                addToast(
+                    'Task updated successfully',
+                    'success',
+                    `"${formData.title}" has been updated.`
+                )
                 fetchData() // Refresh data
             } else {
-                alert('Failed to update task: ' + data.error)
+                addToast(
+                    'Failed to update task',
+                    'danger',
+                    data.error
+                )
             }
         } catch (error) {
             console.error('Error updating task:', error)
-            alert('Failed to update task. Please try again.')
+            addToast(
+                'Error updating task',
+                'danger',
+                'An unexpected error occurred. Please try again.'
+            )
         }
     }
 
@@ -135,7 +150,7 @@ function TaskDetailsPage() {
         }
 
         try {
-            const response = await fetch(`http://localhost:3001/api/tasks/${id}`, {
+            const response = await fetch(`https://taskmate-ai-ef8u.onrender.com/api/tasks/${id}`, {
                 method: 'DELETE',
                 credentials: 'include',
             })
@@ -143,13 +158,26 @@ function TaskDetailsPage() {
             const data = await response.json()
             
             if (data.ok) {
-                navigate('/dashboard')
+                addToast(
+                    'Task deleted successfully',
+                    'success',
+                    'The task has been removed from your list.'
+                )
+                setTimeout(() => navigate('/dashboard'), 1000)
             } else {
-                alert('Failed to delete task: ' + data.error)
+                addToast(
+                    'Failed to delete task',
+                    'danger',
+                    data.error
+                )
             }
         } catch (error) {
             console.error('Error deleting task:', error)
-            alert('Failed to delete task. Please try again.')
+            addToast(
+                'Error deleting task',
+                'danger',
+                'An unexpected error occurred. Please try again.'
+            )
         }
     }
 

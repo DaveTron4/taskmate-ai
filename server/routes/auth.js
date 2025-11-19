@@ -43,8 +43,8 @@ router.get(
 router.get(
   "/github/callback",
   passport.authenticate("github", {
-    successRedirect: "http://localhost:5173/composio",
-    failureRedirect: "http://localhost:5173/login",
+    successRedirect: "https://taskmate-ai-mauve.vercel.app/composio",
+    failureRedirect: "https://taskmate-ai-mauve.vercel.app/login",
   })
 );
 
@@ -72,7 +72,7 @@ export const startGmailAuth = async (req, res) => {
     const externalUserId = await getComposioExternalUserId(req.user.user_id);
     const baseCallbackUrl =
       config.GMAIL_LINK_CALLBACK_URL_GMAIL ||
-      `http://localhost:3001/api/auth/gmail/callback`;
+      `https://taskmate-ai-ef8u.onrender.com/api/auth/gmail/callback`;
     const callbackUrl = `${baseCallbackUrl}?external_user_id=${encodeURIComponent(
       externalUserId
     )}`;
@@ -154,7 +154,7 @@ export const startGoogleMeetingsAuth = async (req, res) => {
     const externalUserId = await getComposioExternalUserId(req.user.user_id);
     const baseCallbackUrl =
       config.GOOGLEMEETINGS_LINK_CALLBACK_URL ||
-      `http://localhost:3001/api/auth/gmeetings/callback`;
+      `https://taskmate-ai-ef8u.onrender.com/api/auth/gmeetings/callback`;
     const callbackUrl = `${baseCallbackUrl}?external_user_id=${encodeURIComponent(
       externalUserId
     )}`;
@@ -184,7 +184,7 @@ export const startGoogleCalendarAuth = async (req, res) => {
     const externalUserId = await getComposioExternalUserId(req.user.user_id);
     const baseCallbackUrl =
       config.GCALENDAR_LINK_CALLBACK_URL ||
-      `http://localhost:3001/api/auth/gcalendar/callback`;
+      `https://taskmate-ai-ef8u.onrender.com/api/auth/gcalendar/callback`;
     const callbackUrl = `${baseCallbackUrl}?external_user_id=${encodeURIComponent(
       externalUserId
     )}`;
@@ -891,7 +891,7 @@ export const canvasCallback = async (req, res) => {
       const redirectUrl =
         process.env.NODE_ENV === "production"
           ? "/login?auth=canvas_success&account_id=" + connected_account_id
-          : "http://localhost:5173/login?auth=canvas_success&account_id=" +
+          : "https://taskmate-ai-mauve.vercel.app/login?auth=canvas_success&account_id=" +
             connected_account_id;
       return res.redirect(redirectUrl);
     }
@@ -903,7 +903,7 @@ export const canvasCallback = async (req, res) => {
     const redirectUrl =
       process.env.NODE_ENV === "production"
         ? "/login?auth=canvas_success"
-        : "http://localhost:5173/login?auth=canvas_success";
+        : "https://taskmate-ai-mauve.vercel.app/login?auth=canvas_success";
     res.redirect(redirectUrl);
   } catch (e) {
     res.status(500).json({ ok: false, error: String(e) });

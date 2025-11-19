@@ -11,7 +11,7 @@ function ComposioPage() {
         // Check if user is authenticated
         const checkAuth = async () => {
             try {
-                const response = await fetch('http://localhost:3001/auth/login/success', {
+                const response = await fetch('https://taskmate-ai-ef8u.onrender.com/auth/login/success', {
                     credentials: 'include'
                 })
                 if (response.ok) {

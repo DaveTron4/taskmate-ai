@@ -19,7 +19,7 @@ export default function MCPLogin({ onComplete }: { onComplete?: () => void }) {
 
     async function checkConnectionStatus() {
         try {
-            const res = await fetch("http://localhost:3001/api/auth/status", {
+            const res = await fetch("https://taskmate-ai-ef8u.onrender.com/api/auth/status", {
                 credentials: 'include'
             });
             const data = await res.json();
@@ -45,7 +45,7 @@ export default function MCPLogin({ onComplete }: { onComplete?: () => void }) {
     async function connectGmail() {
         try {
             setGoogleState("connecting");
-            const res = await fetch(`http://localhost:3001/api/auth/gmail/start`, {
+            const res = await fetch(`https://taskmate-ai-ef8u.onrender.com/api/auth/gmail/start`, {
                 credentials: 'include'
             });
             const data = await res.json();
@@ -79,7 +79,7 @@ export default function MCPLogin({ onComplete }: { onComplete?: () => void }) {
     async function connectCanvas() {
         try {
             setCanvasState("connecting");
-            const res = await fetch("http://localhost:3001/api/auth/canvas/start", {
+            const res = await fetch("https://taskmate-ai-ef8u.onrender.com/api/auth/canvas/start", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 credentials: 'include'
@@ -114,7 +114,7 @@ export default function MCPLogin({ onComplete }: { onComplete?: () => void }) {
     async function connectGoogleCalendar() {
         try {
             setCalendarState("connecting");
-            const res = await fetch(`http://localhost:3001/api/auth/gcalendar/start`, {
+            const res = await fetch(`https://taskmate-ai-ef8u.onrender.com/api/auth/gcalendar/start`, {
                 credentials: 'include'
             });
             const data = await res.json();
@@ -148,7 +148,7 @@ export default function MCPLogin({ onComplete }: { onComplete?: () => void }) {
     async function connectGoogleMeetings() {
         try {
             setMeetingsState("connecting");
-            const res = await fetch(`http://localhost:3001/api/auth/gmeetings/start`, {
+            const res = await fetch(`https://taskmate-ai-ef8u.onrender.com/api/auth/gmeetings/start`, {
                 credentials: 'include'
             });
             const data = await res.json();

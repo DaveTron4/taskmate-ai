@@ -1,0 +1,65 @@
+/* Override PatternFly toast styles to match app design */
+.pf-v5-c-alert-group.pf-m-toast {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  z-index: 9999;
+  max-width: 400px;
+}
+
+.pf-v5-c-alert {
+  margin-bottom: 0.5rem;
+  border-radius: 0.75rem;
+  box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  font-size: 0.875rem;
+  padding: 0.5rem 1rem;
+}
+
+.pf-v5-c-alert__title {
+  font-weight: 600;
+  font-size: 0.875rem;
+}
+
+.pf-v5-c-alert__description {
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+}
+
+.pf-v5-c-alert.pf-m-success {
+  background-color: #f0fdf4;
+  border-left: 4px solid #10b981;
+  color: #065f46;
+}
+
+.pf-v5-c-alert.pf-m-danger {
+  background-color: #fef2f2;
+  border-left: 4px solid #ef4444;
+  color: #991b1b;
+}
+
+.pf-v5-c-alert.pf-m-warning {
+  background-color: #fffbeb;
+  border-left: 4px solid #f59e0b;
+  color: #92400e;
+}
+
+.pf-v5-c-alert.pf-m-info {
+  background-color: #eff6ff;
+  border-left: 4px solid #3b82f6;
+  color: #1e40af;
+}
+
+.pf-v5-c-alert__action {
+  padding: 0;
+}
+
+.pf-v5-c-button.pf-m-plain {
+  padding: 0.25rem;
+  color: currentColor;
+  opacity: 0.6;
+}
+
+.pf-v5-c-button.pf-m-plain:hover {
+  opacity: 1;
+  background-color: transparent;
+}

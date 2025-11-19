@@ -12,7 +12,7 @@ function Login() {
 
   const checkLoginStatus = async () => {
     try {
-      const response = await fetch('http://localhost:3001/auth/login/success', {
+      const response = await fetch('https://taskmate-ai-ef8u.onrender.com/auth/login/success', {
         credentials: 'include'
       })
 
@@ -33,7 +33,7 @@ function Login() {
 
   const handleGitHubLogin = () => {
     // Redirect to backend GitHub OAuth endpoint
-    window.location.href = 'http://localhost:3001/auth/github'
+    window.location.href = 'https://taskmate-ai-ef8u.onrender.com/auth/github'
   }
 
   if (loading) {
@@ -64,7 +64,7 @@ function Login() {
         <div className="mb-2">
           <button
             onClick={handleGitHubLogin}
-            className="flex items-center justify-center gap-1 w-full px-2 py-1 bg-slate-900 text-white border-none rounded text-xs font-medium cursor-pointer transition-colors hover:bg-slate-800"
+            className="flex items-center justify-center gap-1 w-full px-2 py-1 bg-slate-300 border-none rounded text-xs font-medium cursor-pointer transition-colors hover:bg-slate-400"
           >
             <svg
               height="16"

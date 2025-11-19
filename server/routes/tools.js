@@ -265,16 +265,36 @@ export const getCalendarEvents = async (req, res) => {
       items = result.data;
     }
 
+    // Helper function to categorize events
+    const categorizeEvent = (title) => {
+      const lowerTitle = (title || "").toLowerCase();
+      
+      // School-related keywords
+      if (lowerTitle.match(/\b(class|lecture|exam|quiz|homework|assignment|study|school|university|college|cs\s|math|physics|chemistry|biology|lab|seminar|tutorial|project|presentation|essay)\b/)) {
+        return "school"; // Purple
+      }
+      
+      // Work-related keywords
+      if (lowerTitle.match(/\b(work|meeting|shift|standup|scrum|sprint|client|deadline|conference|interview|office|team|project meeting|1:1|one-on-one|sync)\b/)) {
+        return "work"; // Cyan
+      }
+      
+      // Default to personal
+      return "personal"; // Orange
+    };
+
     const events = items.map((event) => {
       const start = event.start?.dateTime || event.start?.date;
       const end = event.end?.dateTime || event.end?.date;
+      const title = event.summary || "No Title";
 
       return {
         id: event.id,
-        title: event.summary || "No Title",
+        title,
         start,
         end,
         allDay: !event.start?.dateTime,
+        category: categorizeEvent(title),
       };
     });
 
@@ -444,6 +464,7 @@ export const getCanvasAssignments = async (req, res) => {
               points: assignment.points_possible ?? null,
               submitted: assignment.submission?.submitted_at ?? null,
               url: assignmentUrl || null,
+              category: "school", // All Canvas assignments are school-related
             });
           }
         }

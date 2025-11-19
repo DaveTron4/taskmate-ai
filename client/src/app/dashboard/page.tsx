@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { CalendarDays, CheckSquare, Mail } from 'lucide-react'
+import { CalendarDays, CheckSquare } from 'lucide-react'
 import Calendar from './components/Calendar'
 import Top from './components/Top'
 import Task from './components/Task'
 import SideBar from './components/SideBar'
 import Settings from './components/Settings'
+import Email from './components/Email'
 import Loader from '../loader'
 
 interface User {
@@ -150,11 +151,11 @@ function DashboardPage() {
                     <Top user={user} />
                     {activeView === 'dashboard' && (
                         <div className="flex-1 px-2 md:px-3 pt-2 md:pt-3 pb-4 md:pb-6">
-                            <div className="flex flex-col gap-2 md:gap-3 h-full">
+                            <div className="flex flex-col gap-2 h-full">
                                 {/* Top Row: Calendar and Tasks */}
-                                <div className="flex flex-col lg:flex-row gap-2 md:gap-3 flex-1">
-                                    <div className="flex-[2] min-h-0">
-                                        <div className="rounded-xl bg-white shadow-lg border border-gray-200 p-2 md:p-3 h-full flex flex-col">
+                                <div className="flex flex-col lg:flex-row gap-2 h-1/2">
+                                    <div className="lg:w-[60%]">
+                                        <div className="rounded-xl bg-white shadow-lg border border-gray-200 p-2 flex flex-col h-full">
                                             <div className="flex items-center gap-2 mb-3">
                                                 <div className="p-1 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg">
                                                     <CalendarDays className="w-2 h-2 text-white" strokeWidth={2} />
@@ -173,8 +174,8 @@ function DashboardPage() {
                                             </div>
                                         </div>
                                     </div>
-                                    <div className="flex-1 min-h-0">
-                                        <div className="rounded-xl bg-white shadow-lg border border-gray-200 p-2 md:p-3 h-full flex flex-col">
+                                    <div className="lg:w-[40%]">
+                                        <div className="rounded-xl bg-white shadow-lg border border-gray-200 p-2 flex flex-col h-full">
                                             <div className="flex items-center gap-2 mb-3">
                                                 <div className="p-1 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg">
                                                     <CheckSquare className="w-2 h-2 text-white" strokeWidth={2} />
@@ -184,7 +185,7 @@ function DashboardPage() {
                                                     <p className="text-xs text-slate-500">AI-prioritized tasks</p>
                                                 </div>
                                             </div>
-                                            <div className="flex-1 overflow-auto">
+                                            <div className="flex-1 overflow-y-auto">
                                                 <Task />
                                             </div>
                                         </div>
@@ -192,18 +193,9 @@ function DashboardPage() {
                                 </div>
                                 
                                 {/* Bottom Row: Emails */}
-                                <div className="h-64 lg:h-80">
-                                    <div className="rounded-xl bg-white shadow-lg border border-gray-200 p-2 md:p-3 h-full">
-                                        <div className="flex items-center gap-2 mb-3">
-                                            <div className="p-1 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg">
-                                                <Mail className="w-2 h-2 text-white" strokeWidth={2} />
-                                            </div>
-                                            <div className="flex flex-col leading-tight">
-                                                <h2 className="text-base font-semibold text-slate-900">Email Summaries</h2>
-                                                <p className="text-xs text-slate-500">Important messages from professors</p>
-                                            </div>
-                                        </div>
-                                        <p className="text-sm text-slate-600">Email summaries will appear here...</p>
+                                <div>
+                                    <div className="rounded-xl bg-gray-100 border border-gray-200 p-2">
+                                        <Email />
                                     </div>
                                 </div>
                             </div>

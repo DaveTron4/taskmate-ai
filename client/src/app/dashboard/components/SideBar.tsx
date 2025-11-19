@@ -17,10 +17,10 @@ export default function SideBar({ activeView, onViewChange }: SideBarProps) {
     const isActive = (viewId: string) => activeView === viewId;
 
     return (
-        <div className="flex flex-col items-center h-screen bg-white border-r border-gray-200 py-2">
+        <div className="flex flex-col items-center h-screen bg-white border-r border-gray-200 py-2 sticky top-0">
             {/* Logo */}
             <div className="mb-4 p-1 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg">
-                <CheckSquare className="w-2 h-2 text-white" strokeWidth={2.5} />
+                <CheckSquare className="w-1.5 h-1.5 text-white" strokeWidth={2.5} />
             </div>
 
             {/* Navigation Items */}
@@ -39,7 +39,7 @@ export default function SideBar({ activeView, onViewChange }: SideBarProps) {
                                         : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
                                 }`}
                             >
-                                <Icon className="w-2 h-2 mx-auto" strokeWidth={2} />
+                                <Icon className="w-1.5 h-1.5 mx-auto" strokeWidth={2} />
                             </button>
 
                             {/* Tooltip */}

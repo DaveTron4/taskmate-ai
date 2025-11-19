@@ -45,7 +45,7 @@ export default function Top({ user }: TopProps) {
     }, []);
 
     return (
-        <div className="flex items-center justify-between w-full bg-white px-2 py-1 shadow-sm border-b border-slate-200">
+        <div className="flex items-center justify-between w-full bg-white px-2 py-1 shadow-sm border-b border-slate-200 sticky top-0 z-10">
 
             {/* LEFT */}
             <div className="flex flex-col leading-tight">
@@ -76,13 +76,13 @@ export default function Top({ user }: TopProps) {
                     <img
                         src={user.avatar_url}
                         alt={user.username}
-                        className="h-6 w-6 rounded-full object-cover"
+                        className="h-4 w-4 rounded-full object-cover"
                     />
                 </button>
 
                 {/* Dropdown Menu */}
                 {isDropdownOpen && (
-                    <div className="absolute right-0 top-8 mt-1 w-40 bg-white rounded-lg shadow-lg border border-slate-200 py-1 z-50">
+                    <div className="absolute right-0 top-6 w-40 bg-white rounded-lg shadow-lg border border-slate-200 py-1 z-50">
                         <div className="px-2 py-1 border-b border-slate-200">
                             <p className="text-sm font-medium text-slate-900">{user.username}</p>
                             {user.email && (

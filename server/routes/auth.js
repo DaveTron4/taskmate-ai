@@ -43,8 +43,8 @@ router.get(
 router.get(
   "/github/callback",
   passport.authenticate("github", {
-    successRedirect: "https://taskmate-ai-mauve.vercel.app/composio",
-    failureRedirect: "https://taskmate-ai-mauve.vercel.app/login",
+    successRedirect: "https://taskmate-ai-ef8u.onrender.com/composio",
+    failureRedirect: "https://taskmate-ai-ef8u.onrender.com/login",
   })
 );
 
@@ -891,7 +891,7 @@ export const canvasCallback = async (req, res) => {
       const redirectUrl =
         process.env.NODE_ENV === "production"
           ? "/login?auth=canvas_success&account_id=" + connected_account_id
-          : "https://taskmate-ai-mauve.vercel.app/login?auth=canvas_success&account_id=" +
+          : "https://taskmate-ai-ef8u.onrender.com/login?auth=canvas_success&account_id=" +
             connected_account_id;
       return res.redirect(redirectUrl);
     }
@@ -903,7 +903,7 @@ export const canvasCallback = async (req, res) => {
     const redirectUrl =
       process.env.NODE_ENV === "production"
         ? "/login?auth=canvas_success"
-        : "https://taskmate-ai-mauve.vercel.app/login?auth=canvas_success";
+        : "https://taskmate-ai-ef8u.onrender.com/login?auth=canvas_success";
     res.redirect(redirectUrl);
   } catch (e) {
     res.status(500).json({ ok: false, error: String(e) });

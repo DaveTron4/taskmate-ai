@@ -24,7 +24,7 @@ export default function Top({ user }: TopProps) {
 
     const handleLogout = async () => {
         try {
-            await fetch("https://taskmate-ai-ef8u.onrender.com/auth/logout", {
+            await fetch("/auth/logout", {
                 credentials: "include",
             });
             navigate("/login", { replace: true });
@@ -43,8 +43,8 @@ export default function Top({ user }: TopProps) {
             // Check if we're editing or creating
             const isEditing = task.taskId;
             const url = isEditing 
-                ? `https://taskmate-ai-ef8u.onrender.com/api/tasks/${task.taskId}`
-                : "https://taskmate-ai-ef8u.onrender.com/api/tasks";
+                ? `/api/tasks/${task.taskId}`
+                : "/api/tasks";
             const method = isEditing ? "PUT" : "POST";
 
             const response = await fetch(url, {
@@ -87,7 +87,7 @@ export default function Top({ user }: TopProps) {
 
     const handleDeleteTask = async (taskId: string) => {
         try {
-            const response = await fetch(`https://taskmate-ai-ef8u.onrender.com/api/tasks/${taskId}`, {
+            const response = await fetch(`/api/tasks/${taskId}`, {
                 method: "DELETE",
                 credentials: "include",
             });

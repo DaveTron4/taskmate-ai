@@ -56,7 +56,7 @@ function TaskDetailsPage() {
 
     const fetchData = async () => {
         try {
-            const userRes = await fetch('https://taskmate-ai-ef8u.onrender.com/auth/login/success', {
+            const userRes = await fetch('/auth/login/success', {
                 credentials: 'include'
             })
 
@@ -74,7 +74,7 @@ function TaskDetailsPage() {
             setUser(userData.user)
 
             // Fetch task details
-            const taskRes = await fetch(`https://taskmate-ai-ef8u.onrender.com/api/tasks/${id}`, {
+            const taskRes = await fetch(`/api/tasks/${id}`, {
                 credentials: 'include'
             })
 
@@ -107,7 +107,7 @@ function TaskDetailsPage() {
 
     const handleUpdate = async () => {
         try {
-            const response = await fetch(`https://taskmate-ai-ef8u.onrender.com/api/tasks/${id}`, {
+            const response = await fetch(`/api/tasks/${id}`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
@@ -150,7 +150,7 @@ function TaskDetailsPage() {
         }
 
         try {
-            const response = await fetch(`https://taskmate-ai-ef8u.onrender.com/api/tasks/${id}`, {
+            const response = await fetch(`/api/tasks/${id}`, {
                 method: 'DELETE',
                 credentials: 'include',
             })

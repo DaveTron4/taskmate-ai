@@ -47,11 +47,14 @@ passport.deserializeUser((user, done) => {
 app.use(express.json());
 app.use(
   cors({
-    origin: "https://taskmate-ai-mauve.vercel.app",
+    origin: "https://taskmate-ai-ef8u.onrender.com",
     methods: "GET,POST,PUT,DELETE,PATCH",
     credentials: true,
   })
 );
+
+// Serve static files from the React app
+app.use(express.static(path.join(__dirname, "../client/dist")));
 
 // routes
 // Auth routes
@@ -94,6 +97,16 @@ app.get("/api/tasks", tasksController.getTasks);
 app.get("/api/tasks/:taskId", tasksController.getTaskById);
 app.put("/api/tasks/:taskId", tasksController.updateTask);
 app.delete("/api/tasks/:taskId", tasksController.deleteTask);
+
+// Serve React app for all other routes (must be last)
+// Use a regex pattern to match all routes that don't start with /api or /auth
+app.use((req, res, next) => {
+  if (!req.path.startsWith('/api') && !req.path.startsWith('/auth')) {
+    res.sendFile(path.join(__dirname, "../client/dist/index.html"));
+  } else {
+    next();
+  }
+});
 
 const PORT = process.env.PORT || 3001;
 

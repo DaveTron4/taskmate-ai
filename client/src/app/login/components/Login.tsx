@@ -12,7 +12,7 @@ function Login() {
 
   const checkLoginStatus = async () => {
     try {
-      const response = await fetch('https://taskmate-ai-ef8u.onrender.com/auth/login/success', {
+      const response = await fetch('/auth/login/success', {
         credentials: 'include'
       })
 
@@ -33,7 +33,7 @@ function Login() {
 
   const handleGitHubLogin = () => {
     // Redirect to backend GitHub OAuth endpoint
-    window.location.href = 'https://taskmate-ai-ef8u.onrender.com/auth/github'
+    window.location.href = '/auth/github'
   }
 
   if (loading) {

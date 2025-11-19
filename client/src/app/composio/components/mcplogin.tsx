@@ -19,9 +19,21 @@ export default function MCPLogin({ onComplete }: { onComplete?: () => void }) {
 
     async function checkConnectionStatus() {
         try {
+            // Add timeout to fetch request (8 seconds)
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 8000);
+
             const res = await fetch("/api/auth/status", {
-                credentials: 'include'
+                credentials: 'include',
+                signal: controller.signal
             });
+
+            clearTimeout(timeoutId);
+
+            if (!res.ok) {
+                throw new Error(`HTTP error! status: ${res.status}`);
+            }
+
             const data = await res.json();
             if (data?.ok) {
                 const newStatus = {
@@ -36,7 +48,11 @@ export default function MCPLogin({ onComplete }: { onComplete?: () => void }) {
             }
             return null;
         } catch (e) {
-            console.error("Failed to check connection status:", e);
+            if (e instanceof Error && e.name === 'AbortError') {
+                console.warn("Connection status check timed out");
+            } else {
+                console.error("Failed to check connection status:", e);
+            }
             setConnectionStatus(prev => ({ ...prev, loading: false }));
             return null;
         }
@@ -48,18 +64,33 @@ export default function MCPLogin({ onComplete }: { onComplete?: () => void }) {
             const res = await fetch(`/api/auth/gmail/start`, {
                 credentials: 'include'
             });
+
+            if (!res.ok) {
+                throw new Error(`HTTP error! status: ${res.status}`);
+            }
+
             const data = await res.json();
             if (data?.ok && data.url) {
                 window.open(data.url, '_blank');
                 let attempts = 0;
+                const maxAttempts = 30;
                 const checkInterval = setInterval(async () => {
                     attempts++;
-                    const status = await checkConnectionStatus();
-                    if (attempts >= 30 || status?.gmail) {
-                        clearInterval(checkInterval);
+                    try {
+                        const status = await checkConnectionStatus();
                         if (status?.gmail) {
+                            clearInterval(checkInterval);
                             setGoogleState("connected");
-                        } else if (attempts >= 30) {
+                        } else if (attempts >= maxAttempts) {
+                            clearInterval(checkInterval);
+                            setGoogleState("error");
+                            alert("Gmail connection timed out. Please check if the connection was successful in the popup window.");
+                        }
+                    } catch (checkError) {
+                        console.error("Error checking connection status:", checkError);
+                        // Continue polling unless we've hit max attempts
+                        if (attempts >= maxAttempts) {
+                            clearInterval(checkInterval);
                             setGoogleState("error");
                         }
                     }
@@ -73,6 +104,8 @@ export default function MCPLogin({ onComplete }: { onComplete?: () => void }) {
         } catch (e) {
             console.error("Failed to start Gmail auth:", e);
             setGoogleState("error");
+            const errorMessage = e instanceof Error ? e.message : 'Unknown error';
+            alert(`Failed to start Gmail connection: ${errorMessage}`);
         }
     }
 

@@ -940,9 +940,26 @@ export const checkAuthStatus = async (req, res) => {
       userConnectionsResult.rows.map((row) => row.composio_account_id)
     );
 
-    const allConnections = await composio.connectedAccounts.list();
+    // Add timeout wrapper for Composio API call
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => reject(new Error("Composio API timeout")), 10000); // 10 second timeout
+    });
 
-    const userConnections = allConnections.items.filter((c) => {
+    let allConnections = { items: [] };
+    try {
+      allConnections = await Promise.race([
+        composio.connectedAccounts.list(),
+        timeoutPromise,
+      ]);
+    } catch (apiError) {
+      console.warn(
+        "Composio API call failed or timed out, using database only:",
+        apiError.message
+      );
+      // Continue with database-only check if API fails
+    }
+
+    const userConnections = (allConnections.items || []).filter((c) => {
       const isInDatabase = userConnectionIds.has(c.id);
       const matchesExternalUserId =
         c.externalUserId === externalUserId ||
@@ -982,6 +999,16 @@ export const checkAuthStatus = async (req, res) => {
     const gmailConns = userConnections.filter(
       (c) => c.toolkit?.slug === "gmail"
     );
+
+    // Check database directly for Gmail connections (in case Composio API is slow or fails)
+    const gmailDbCheck = await pool.query(
+      `SELECT composio_account_id FROM composio_connections WHERE user_id = $1 AND service_name = $2`,
+      [userId, "gmail"]
+    );
+    if (gmailDbCheck.rows.length > 0 && gmailConns.length === 0) {
+      // Connection exists in DB but not in Composio API yet - trust the DB
+      gmailConns.push({ id: gmailDbCheck.rows[0].composio_account_id });
+    }
 
     const googleCalendarConns = userConnections.filter(
       (c) => c.toolkit?.slug === "googlecalendar" || c.toolkit?.slug === "gcal"

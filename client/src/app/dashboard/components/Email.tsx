@@ -77,7 +77,7 @@ export default function EmailUI() {
                             <h2 className="text-sm font-semibold text-slate-900">Email Insights</h2>
                         </div>
                         <p className="text-xs text-slate-500">
-                            {error || "No emails found. Connect Gmail to see your sent emails."}
+                            {error || "No emails found."}
                         </p>
                     </div>
                 </div>

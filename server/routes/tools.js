@@ -618,12 +618,37 @@ export const getGmailEmails = async (req, res) => {
     }
 
     const externalUserId = await getComposioExternalUserId(req.user.user_id);
+    console.log(
+      `[Gmail] Fetching emails for user ${req.user.user_id} (external: ${externalUserId})`
+    );
 
     // Get Gmail tools
-    const gmailTools = await composio.tools.get(externalUserId, {
-      toolkits: ["GMAIL"],
-      limit: 100,
-    });
+    let gmailTools = [];
+    try {
+      gmailTools = await composio.tools.get(externalUserId, {
+        toolkits: ["GMAIL"],
+        limit: 100,
+      });
+      console.log(`[Gmail] Found ${gmailTools.length} Gmail tools`);
+    } catch (toolsError) {
+      console.error("[Gmail] Error fetching Gmail tools:", toolsError);
+      return res.json({
+        ok: true,
+        emails: [],
+        message:
+          "Could not access Gmail tools. Please check your Gmail connection.",
+      });
+    }
+
+    if (gmailTools.length === 0) {
+      console.warn("[Gmail] No Gmail tools found");
+      return res.json({
+        ok: true,
+        emails: [],
+        message:
+          "No Gmail tools available. Please reconnect your Gmail account.",
+      });
+    }
 
     // Find the list messages tool
     let listMessagesTool = gmailTools.find(
@@ -636,21 +661,32 @@ export const getGmailEmails = async (req, res) => {
 
     if (!listMessagesTool) {
       // Search for it
-      const searchResults = await composio.tools.get(externalUserId, {
-        toolkits: ["GMAIL"],
-        search: "list sent messages",
-        limit: 50,
-      });
-      listMessagesTool = searchResults.find(
-        (tool) =>
-          tool.name === "GMAIL_LIST_MESSAGES" ||
-          tool.name === "GMAIL_LIST_SENT_MESSAGES" ||
-          (tool.name.toLowerCase().includes("list") &&
-            tool.name.toLowerCase().includes("message"))
-      );
+      try {
+        const searchResults = await composio.tools.get(externalUserId, {
+          toolkits: ["GMAIL"],
+          search: "list messages",
+          limit: 50,
+        });
+        listMessagesTool = searchResults.find(
+          (tool) =>
+            tool.name === "GMAIL_LIST_MESSAGES" ||
+            tool.name === "GMAIL_LIST_SENT_MESSAGES" ||
+            (tool.name.toLowerCase().includes("list") &&
+              tool.name.toLowerCase().includes("message"))
+        );
+      } catch (searchError) {
+        console.error(
+          "[Gmail] Error searching for list messages tool:",
+          searchError
+        );
+      }
     }
 
     if (!listMessagesTool) {
+      console.warn(
+        "[Gmail] List messages tool not found. Available tools:",
+        gmailTools.map((t) => t.name).slice(0, 10)
+      );
       return res.json({
         ok: true,
         emails: [],
@@ -658,35 +694,71 @@ export const getGmailEmails = async (req, res) => {
       });
     }
 
-    // Fetch sent messages (last 10)
+    console.log(`[Gmail] Using tool: ${listMessagesTool.name}`);
+
+    // Try fetching messages - try inbox first, then sent
     let messagesResult;
-    try {
-      messagesResult = await composio.tools.execute(listMessagesTool.name, {
-        userId: externalUserId,
-        arguments: {
-          query: "in:sent",
-          maxResults: 10,
-        },
-      });
-    } catch (executeError) {
-      console.error("Error executing Gmail list messages:", executeError);
-      // Try alternative approach - get messages directly
+    const queries = ["in:inbox", "in:sent", ""]; // Try inbox, sent, then all
+
+    for (const query of queries) {
       try {
-        messagesResult = await composio.tools.execute("GMAIL_LIST_MESSAGES", {
+        const args = query ? { query, maxResults: 10 } : { maxResults: 10 };
+        console.log(
+          `[Gmail] Attempting to fetch with query: "${query || "all"}"`
+        );
+
+        messagesResult = await composio.tools.execute(listMessagesTool.name, {
           userId: externalUserId,
-          arguments: {
-            query: "in:sent",
-            maxResults: 10,
-          },
+          arguments: args,
         });
-      } catch (altError) {
-        console.error("Alternative Gmail fetch also failed:", altError);
-        return res.json({
-          ok: true,
-          emails: [],
-          message: "Could not fetch Gmail messages",
-        });
+
+        console.log(
+          `[Gmail] Successfully fetched messages with query: "${
+            query || "all"
+          }"`
+        );
+        break; // Success, exit loop
+      } catch (executeError) {
+        console.error(
+          `[Gmail] Error with query "${query || "all"}":`,
+          executeError.message
+        );
+
+        // Try direct tool name as fallback
+        if (query === queries[0]) {
+          // Only try fallback on first attempt
+          try {
+            console.log("[Gmail] Trying direct GMAIL_LIST_MESSAGES tool...");
+            messagesResult = await composio.tools.execute(
+              "GMAIL_LIST_MESSAGES",
+              {
+                userId: externalUserId,
+                arguments: query
+                  ? { query, maxResults: 10 }
+                  : { maxResults: 10 },
+              }
+            );
+            console.log("[Gmail] Direct tool execution succeeded");
+            break;
+          } catch (altError) {
+            console.error(
+              "[Gmail] Direct tool execution also failed:",
+              altError.message
+            );
+            // Continue to next query
+          }
+        }
       }
+    }
+
+    if (!messagesResult) {
+      console.error("[Gmail] No messages result after all attempts");
+      return res.json({
+        ok: true,
+        emails: [],
+        message:
+          "Could not fetch Gmail messages. Please check your Gmail connection.",
+      });
     }
 
     // Extract messages from result
@@ -699,13 +771,25 @@ export const getGmailEmails = async (req, res) => {
       messages = messagesResult;
     } else if (messagesResult?.data && Array.isArray(messagesResult.data)) {
       messages = messagesResult.data;
+    } else if (
+      messagesResult?.data?.response_data &&
+      Array.isArray(messagesResult.data.response_data)
+    ) {
+      messages = messagesResult.data.response_data;
     }
 
+    console.log(`[Gmail] Extracted ${messages.length} messages from result`);
+    console.log(
+      "[Gmail] Result structure:",
+      JSON.stringify(Object.keys(messagesResult || {})).substring(0, 200)
+    );
+
     if (messages.length === 0) {
+      console.warn("[Gmail] No messages found in result");
       return res.json({
         ok: true,
         emails: [],
-        message: "No sent emails found",
+        message: "No emails found. Try sending or receiving some emails first.",
       });
     }
 

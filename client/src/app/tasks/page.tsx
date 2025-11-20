@@ -40,6 +40,8 @@ function TaskDetailsPage() {
     const [loading, setLoading] = useState(true)
     const [activeView, setActiveView] = useState('dashboard')
     const [isEditing, setIsEditing] = useState(false)
+    const [isUpdating, setIsUpdating] = useState(false)
+    const [isDeleting, setIsDeleting] = useState(false)
     const [formData, setFormData] = useState({
         title: '',
         description: '',
@@ -106,6 +108,8 @@ function TaskDetailsPage() {
     }
 
     const handleUpdate = async () => {
+        if (isUpdating) return;
+        setIsUpdating(true);
         try {
             const response = await fetch(`/api/tasks/${id}`, {
                 method: 'PUT',
@@ -141,14 +145,18 @@ function TaskDetailsPage() {
                 'danger',
                 'An unexpected error occurred. Please try again.'
             )
+        } finally {
+            setIsUpdating(false);
         }
     }
 
     const handleDelete = async () => {
+        if (isDeleting) return;
         if (!window.confirm('Are you sure you want to delete this task?')) {
             return
         }
 
+        setIsDeleting(true);
         try {
             const response = await fetch(`/api/tasks/${id}`, {
                 method: 'DELETE',
@@ -178,6 +186,8 @@ function TaskDetailsPage() {
                 'danger',
                 'An unexpected error occurred. Please try again.'
             )
+        } finally {
+            setIsDeleting(false);
         }
     }
 
@@ -242,17 +252,25 @@ function TaskDetailsPage() {
                                         <>
                                             <button
                                                 onClick={() => setIsEditing(true)}
-                                                className="p-1 hover:bg-gray-100 rounded transition-colors"
+                                                disabled={isUpdating || isDeleting}
+                                                className="p-1 hover:bg-gray-100 rounded transition-colors disabled:opacity-50"
+                                                style={{ cursor: (isUpdating || isDeleting) ? 'not-allowed' : 'pointer' }}
                                                 title="Edit task"
                                             >
                                                 <Edit className="w-2 h-2 text-slate-600" />
                                             </button>
                                             <button
                                                 onClick={handleDelete}
-                                                className="p-1 hover:bg-red-100 rounded transition-colors"
-                                                title="Delete task"
+                                                disabled={isUpdating || isDeleting}
+                                                className="p-1 hover:bg-red-100 rounded transition-colors disabled:opacity-50"
+                                                style={{ cursor: (isUpdating || isDeleting) ? 'not-allowed' : 'pointer' }}
+                                                title={isDeleting ? "Deleting..." : "Delete task"}
                                             >
-                                                <Trash2 className="w-2 h-2 text-red-600" />
+                                                {isDeleting ? (
+                                                    <div className="w-2 h-2 border-2 border-red-600 border-t-transparent rounded-full animate-spin" />
+                                                ) : (
+                                                    <Trash2 className="w-2 h-2 text-red-600" />
+                                                )}
                                             </button>
                                         </>
                                     )}
@@ -410,9 +428,14 @@ function TaskDetailsPage() {
                                 <div className="flex gap-1 mt-2 pt-2 border-t border-gray-200">
                                     <button
                                         onClick={handleUpdate}
-                                        className="px-2 py-1 text-xs font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded transition"
+                                        disabled={isUpdating || isDeleting}
+                                        className="px-2 py-1 text-xs font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded transition disabled:opacity-50 flex items-center gap-1"
+                                        style={{ cursor: (isUpdating || isDeleting) ? 'not-allowed' : 'pointer' }}
                                     >
-                                        Save Changes
+                                        {isUpdating && (
+                                            <div className="w-2 h-2 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                        )}
+                                        {isUpdating ? 'Saving...' : 'Save Changes'}
                                     </button>
                                     <button
                                         onClick={() => {
@@ -427,7 +450,9 @@ function TaskDetailsPage() {
                                                 status: task.status || 'not_started',
                                             })
                                         }}
-                                        className="px-2 py-1 text-xs font-medium text-slate-600 bg-gray-100 hover:bg-gray-200 rounded transition"
+                                        disabled={isUpdating || isDeleting}
+                                        className="px-2 py-1 text-xs font-medium text-slate-600 bg-gray-100 hover:bg-gray-200 rounded transition disabled:opacity-50"
+                                        style={{ cursor: (isUpdating || isDeleting) ? 'not-allowed' : 'pointer' }}
                                     >
                                         Cancel
                                     </button>

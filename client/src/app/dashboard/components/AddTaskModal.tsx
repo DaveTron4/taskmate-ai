@@ -31,6 +31,8 @@ interface EditTask {
 }
 
 export default function AddTaskModal({ isOpen, onClose, onSave, onDelete, editTask }: AddTaskModalProps) {
+  const [isSaving, setIsSaving] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [formData, setFormData] = useState<NewTask>({
     title: "",
     description: "",
@@ -68,27 +70,37 @@ export default function AddTaskModal({ isOpen, onClose, onSave, onDelete, editTa
 
   if (!isOpen) return null;
 
-  const handleSave = () => {
-    if (!formData.title.trim()) return;
-    onSave({ ...formData, taskId: editTask?.taskId } as any);
-    onClose();
-    // Reset form
-    setFormData({
-      title: "",
-      description: "",
-      dueDate: "",
-      dueTime: "",
-      category: "school",
-      priority: "medium",
-      hasNoDueDate: false,
-    });
+  const handleSave = async () => {
+    if (!formData.title.trim() || isSaving) return;
+    setIsSaving(true);
+    try {
+      await onSave({ ...formData, taskId: editTask?.taskId } as any);
+      onClose();
+      // Reset form
+      setFormData({
+        title: "",
+        description: "",
+        dueDate: "",
+        dueTime: "",
+        category: "school",
+        priority: "medium",
+        hasNoDueDate: false,
+      });
+    } finally {
+      setIsSaving(false);
+    }
   };
 
-  const handleDelete = () => {
-    if (!editTask?.taskId) return;
+  const handleDelete = async () => {
+    if (!editTask?.taskId || isDeleting) return;
     if (window.confirm("Are you sure you want to delete this task?")) {
-      onDelete?.(editTask.taskId);
-      onClose();
+      setIsDeleting(true);
+      try {
+        await onDelete?.(editTask.taskId);
+        onClose();
+      } finally {
+        setIsDeleting(false);
+      }
     }
   };
 
@@ -110,16 +122,24 @@ export default function AddTaskModal({ isOpen, onClose, onSave, onDelete, editTa
             {editTask && onDelete && (
               <button
                 onClick={handleDelete}
-                className="p-1 hover:bg-red-100 rounded transition-colors"
-                title="Delete task"
+                disabled={isDeleting || isSaving}
+                className="p-1 hover:bg-red-100 rounded transition-colors disabled:opacity-50"
+                style={{ cursor: (isDeleting || isSaving) ? 'not-allowed' : 'pointer' }}
+                title={isDeleting ? "Deleting..." : "Delete task"}
               >
-                <Trash2 className="w-2 h-2 text-red-600" />
+                {isDeleting ? (
+                  <div className="w-2 h-2 border-2 border-red-600 border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  <Trash2 className="w-2 h-2 text-red-600" />
+                )}
               </button>
             )}
           </div>
           <button
             onClick={onClose}
-            className="p-1 hover:bg-gray-100 rounded transition-colors"
+            disabled={isSaving || isDeleting}
+            className="p-1 hover:bg-gray-100 rounded transition-colors disabled:opacity-50"
+            style={{ cursor: (isSaving || isDeleting) ? 'not-allowed' : 'pointer' }}
           >
             <X className="w-2 h-2 text-slate-600" />
           </button>
@@ -262,16 +282,22 @@ export default function AddTaskModal({ isOpen, onClose, onSave, onDelete, editTa
         <div className="flex items-center justify-end gap-1 p-2 border-t border-gray-200">
           <button
             onClick={onClose}
-            className="px-2 py-1 text-xs font-medium text-slate-600 hover:bg-gray-100 rounded transition-colors"
+            disabled={isSaving || isDeleting}
+            className="px-2 py-1 text-xs font-medium text-slate-600 hover:bg-gray-100 rounded transition-colors disabled:opacity-50"
+            style={{ cursor: (isSaving || isDeleting) ? 'not-allowed' : 'pointer' }}
           >
             Cancel
           </button>
           <button
             onClick={handleSave}
-            disabled={!formData.title.trim()}
-            className="px-2 py-1 text-xs font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled={!formData.title.trim() || isSaving || isDeleting}
+            className="px-2 py-1 text-xs font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded transition-colors disabled:opacity-50 flex items-center gap-1"
+            style={{ cursor: (!formData.title.trim() || isSaving || isDeleting) ? 'not-allowed' : 'pointer' }}
           >
-            {editTask ? "Update Task" : "Save Task"}
+            {isSaving && (
+              <div className="w-2 h-2 border-2 border-white border-t-transparent rounded-full animate-spin" />
+            )}
+            {isSaving ? "Saving..." : (editTask ? "Update Task" : "Save Task")}
           </button>
         </div>
       </div>

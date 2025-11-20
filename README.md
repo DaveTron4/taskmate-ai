@@ -38,12 +38,6 @@ Displays all assignments and events in a clean, color-coded weekly view that upd
 
 ![Smart Schedule Dashboard](./feature%20gifs/Smart_schedule_dashboard.gif)
 
-### Intelligent Notifications
-
-Proactively sends reminders for important deadlines, meetings, and unread priority emails, helping students avoid last-minute panic.
-
-[gif goes here]
-
 ### ✅ AI Email Summarizer
 
 Scans the user's Gmail inbox for important messages (like from professors) and displays brief, AI-generated summaries directly in the dashboard, highlighting key action items.
@@ -66,7 +60,7 @@ Show pop-up notifications (toasts) to provide brief feedback to the user (e.g., 
 
 ![Toast Alerts](./feature%20gifs/toast.gif)
 
-### Disable Buttons After Click
+### ✅ Disable Buttons After Click
 Prevent users from accidentally submitting a form or action multiple times by disabling the button after the first click.
 
 [gif goes here]

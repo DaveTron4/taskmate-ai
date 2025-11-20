@@ -673,8 +673,8 @@ export const getGmailEmails = async (req, res) => {
             tool.name === "GMAIL_FETCH_EMAILS" ||
             tool.name === "GMAIL_LIST_MESSAGES" ||
             (tool.name.toLowerCase().includes("fetch") &&
-              tool.name.toLowerCase().includes("email"))
         );
+                text.match(/from\s+([^\r\n<@]+@[\w.-]+)/i);
       } catch (searchError) {
         console.error(
           "[Gmail] Error searching for fetch emails tool:",
@@ -902,12 +902,29 @@ export const getGmailEmails = async (req, res) => {
             .trim()
             .substring(0, 500);
 
+
           // Try to extract "From:"
-          const fromMatch =
+          let fromMatch =
             text.match(/From:\s*([^\r\n<]+)/i) ||
-            text.match(/from\s+([^\r\n<@]+@[^\r\n<]+)/i);
+            text.match(/from\s+([^\r\n<@]+@[^
+\n<]+)/i);
           if (fromMatch) {
             from = fromMatch[1].trim().replace(/[<>]/g, "");
+          } else if (message.from) {
+            // Try message.from if available (array or string)
+            if (typeof message.from === "string") {
+              from = message.from;
+            } else if (Array.isArray(message.from) && message.from.length > 0) {
+              from = message.from[0];
+            }
+          } else if (message.payload && message.payload.headers) {
+            // Try to find 'From' header in payload.headers
+            const fromHeader = message.payload.headers.find(
+              (h) => h.name && h.name.toLowerCase() === "from"
+            );
+            if (fromHeader && fromHeader.value) {
+              from = fromHeader.value;
+            }
           }
 
           // Try to extract date from text if messageTimestamp wasn't available

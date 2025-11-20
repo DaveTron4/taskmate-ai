@@ -102,36 +102,56 @@ export default function EmailUI() {
             </div>
 
             <div className="flex gap-2 overflow-x-auto pb-1">
-                {emails.map((email) => (
-                    <div
-                        key={email.id}
-                        className="p-2 bg-white border border-gray-200 rounded-lg hover:shadow-md transition-shadow cursor-pointer flex-shrink-0 w-[280px]"
-                    >
-                        <div className="flex items-start justify-between gap-2 mb-1">
-                            <div className="flex items-center gap-1 min-w-0">
-                                <h3 className="text-sm font-semibold text-slate-900 whitespace-nowrap">
-                                    {email.sender}
-                                </h3>
-                                {email.priority === "important" && (
-                                    <span className="px-1 py-0.5 bg-rose-600 text-white rounded text-[10px] font-semibold flex-shrink-0">
-                                        Important
+                {emails.map((email) => {
+                    // Construct Gmail URL if possible
+                    let gmailUrl = undefined;
+                    if (email.id && typeof email.id === 'string' && email.id !== 'unknown') {
+                        gmailUrl = `https://mail.google.com/mail/u/0/#all/${email.id}`;
+                    }
+                    return (
+                        <div
+                            key={email.id}
+                            className="p-2 bg-white border border-gray-200 rounded-lg hover:shadow-md transition-shadow cursor-pointer flex-shrink-0 w-[400px] min-h-[160px]"
+                        >
+                            <div className="flex items-start justify-between gap-1 mb-1">
+                                <div className="flex items-center gap-1 min-w-0">
+                                    <h3 className="text-sm font-semibold text-slate-900 truncate">
+                                        {email.sender}
+                                    </h3>
+                                    {email.priority === "important" && (
+                                        <span className="px-0.5 py-0.5 bg-rose-600 text-white rounded text-[10px] font-semibold flex-shrink-0">
+                                            Important
+                                        </span>
+                                    )}
+                                </div>
+                                {gmailUrl ? (
+                                    <a
+                                        href={gmailUrl}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="text-slate-400 hover:text-slate-600 flex-shrink-0"
+                                        title="Open in Gmail"
+                                        onClick={e => e.stopPropagation()}
+                                    >
+                                        <ExternalLinkIcon className="w-1.5 h-1.5" />
+                                    </a>
+                                ) : (
+                                    <span className="text-slate-300 flex-shrink-0" title="No link available">
+                                        <ExternalLinkIcon className="w-1.5 h-1.5" />
                                     </span>
                                 )}
                             </div>
-                            <button className="text-slate-400 hover:text-slate-600 flex-shrink-0">
-                                <ExternalLinkIcon className="w-1.5 h-1.5" />
-                            </button>
+
+                            <p className="text-xs text-slate-600 mb-1">{email.subject}</p>
+
+                            <p className="text-xs text-slate-500 leading-relaxed mb-1">
+                                {email.summary}
+                            </p>
+
+                            <div className="text-xs text-slate-400">{email.timestamp}</div>
                         </div>
-
-                        <p className="text-xs text-slate-600 mb-1">{email.subject}</p>
-
-                        <p className="text-xs text-slate-500 leading-relaxed mb-1">
-                            {email.summary}
-                        </p>
-
-                        <div className="text-xs text-slate-400">{email.timestamp}</div>
-                    </div>
-                ))}
+                    );
+                })}
             </div>
         </div>
     );

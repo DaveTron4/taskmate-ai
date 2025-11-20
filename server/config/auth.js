@@ -1,9 +1,16 @@
 import { pool } from "./database.js";
 
+const getBaseUrl = () => {
+  if (process.env.NODE_ENV === "production") {
+    return "https://taskmate-ai-ef8u.onrender.com";
+  }
+  return "http://localhost:3001";
+};
+
 const options = {
   clientID: process.env.GITHUB_CLIENT_ID,
   clientSecret: process.env.GITHUB_CLIENT_SECRET,
-  callbackURL: "https://taskmate-ai-ef8u.onrender.com/auth/github/callback",
+  callbackURL: `${getBaseUrl()}/auth/github/callback`,
 };
 
 const verify = async (accessToken, refreshToken, profile, callback) => {

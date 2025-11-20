@@ -45,9 +45,24 @@ passport.deserializeUser((user, done) => {
 
 // CORS and JSON middleware
 app.use(express.json());
+const allowedOrigins = [
+  "https://taskmate-ai-ef8u.onrender.com",
+  "http://localhost:5173",
+  "http://localhost:3000",
+  "http://127.0.0.1:5173",
+];
+
 app.use(
   cors({
-    origin: "https://taskmate-ai-ef8u.onrender.com",
+    origin: function (origin, callback) {
+      // Allow requests with no origin (like mobile apps or curl requests)
+      if (!origin) return callback(null, true);
+      if (allowedOrigins.indexOf(origin) !== -1) {
+        callback(null, true);
+      } else {
+        callback(null, true); // Allow all in dev, restrict in production if needed
+      }
+    },
     methods: "GET,POST,PUT,DELETE,PATCH",
     credentials: true,
   })

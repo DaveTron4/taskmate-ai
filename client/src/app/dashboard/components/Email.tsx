@@ -33,7 +33,8 @@ export default function EmailUI() {
 
             const data = await response.json();
             if (data.ok && Array.isArray(data.emails)) {
-                setEmails(data.emails);
+                // Limit to 4 emails for display
+                setEmails(data.emails.slice(0, 4));
             } else {
                 setEmails([]);
             }

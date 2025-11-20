@@ -7,6 +7,22 @@ import { pool } from "../config/database.js";
 
 const router = express.Router();
 
+// Helper function to get the correct frontend URL based on environment
+const getFrontendUrl = () => {
+  if (process.env.NODE_ENV === "production") {
+    return "https://taskmate-ai-ef8u.onrender.com";
+  }
+  return "http://localhost:5173";
+};
+
+// Helper function to get the correct backend URL based on environment
+const getBackendUrl = () => {
+  if (process.env.NODE_ENV === "production") {
+    return "https://taskmate-ai-ef8u.onrender.com";
+  }
+  return "http://localhost:3001";
+};
+
 router.get("/login/success", (req, res) => {
   if (req.user) {
     res.status(200).json({ success: true, user: req.user });
@@ -42,10 +58,12 @@ router.get(
 
 router.get(
   "/github/callback",
-  passport.authenticate("github", {
-    successRedirect: "https://taskmate-ai-ef8u.onrender.com/composio",
-    failureRedirect: "https://taskmate-ai-ef8u.onrender.com/login",
-  })
+  passport.authenticate("github", { session: true }),
+  (req, res) => {
+    // Redirect to frontend after successful authentication
+    const frontendUrl = getFrontendUrl();
+    res.redirect(`${frontendUrl}/composio`);
+  }
 );
 
 export default router;
@@ -72,7 +90,7 @@ export const startGmailAuth = async (req, res) => {
     const externalUserId = await getComposioExternalUserId(req.user.user_id);
     const baseCallbackUrl =
       config.GMAIL_LINK_CALLBACK_URL_GMAIL ||
-      `https://taskmate-ai-ef8u.onrender.com/api/auth/gmail/callback`;
+      `${getBackendUrl()}/api/auth/gmail/callback`;
     const callbackUrl = `${baseCallbackUrl}?external_user_id=${encodeURIComponent(
       externalUserId
     )}`;
@@ -154,7 +172,7 @@ export const startGoogleMeetingsAuth = async (req, res) => {
     const externalUserId = await getComposioExternalUserId(req.user.user_id);
     const baseCallbackUrl =
       config.GOOGLEMEETINGS_LINK_CALLBACK_URL ||
-      `https://taskmate-ai-ef8u.onrender.com/api/auth/gmeetings/callback`;
+      `${getBackendUrl()}/api/auth/gmeetings/callback`;
     const callbackUrl = `${baseCallbackUrl}?external_user_id=${encodeURIComponent(
       externalUserId
     )}`;
@@ -184,7 +202,7 @@ export const startGoogleCalendarAuth = async (req, res) => {
     const externalUserId = await getComposioExternalUserId(req.user.user_id);
     const baseCallbackUrl =
       config.GCALENDAR_LINK_CALLBACK_URL ||
-      `https://taskmate-ai-ef8u.onrender.com/api/auth/gcalendar/callback`;
+      `${getBackendUrl()}/api/auth/gcalendar/callback`;
     const callbackUrl = `${baseCallbackUrl}?external_user_id=${encodeURIComponent(
       externalUserId
     )}`;
@@ -922,10 +940,8 @@ export const canvasCallback = async (req, res) => {
         console.error("Error storing Composio connection:", dbError);
       }
       const redirectUrl =
-        process.env.NODE_ENV === "production"
-          ? "/login?auth=canvas_success&account_id=" + connected_account_id
-          : "https://taskmate-ai-ef8u.onrender.com/login?auth=canvas_success&account_id=" +
-            connected_account_id;
+        `${getFrontendUrl()}/login?auth=canvas_success&account_id=` +
+        connected_account_id;
       return res.redirect(redirectUrl);
     }
 
@@ -933,10 +949,7 @@ export const canvasCallback = async (req, res) => {
       return res.status(400).json({ ok: false, error: "Missing account ID" });
     }
 
-    const redirectUrl =
-      process.env.NODE_ENV === "production"
-        ? "/login?auth=canvas_success"
-        : "https://taskmate-ai-ef8u.onrender.com/login?auth=canvas_success";
+    const redirectUrl = `${getFrontendUrl()}/login?auth=canvas_success`;
     res.redirect(redirectUrl);
   } catch (e) {
     res.status(500).json({ ok: false, error: String(e) });

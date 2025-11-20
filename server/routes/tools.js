@@ -650,67 +650,83 @@ export const getGmailEmails = async (req, res) => {
       });
     }
 
-    // Find the list messages tool
-    let listMessagesTool = gmailTools.find(
+    // Find the fetch emails tool (GMAIL_FETCH_EMAILS is the correct tool name)
+    let fetchEmailsTool = gmailTools.find(
       (tool) =>
+        tool.name === "GMAIL_FETCH_EMAILS" ||
         tool.name === "GMAIL_LIST_MESSAGES" ||
         tool.name === "GMAIL_LIST_SENT_MESSAGES" ||
-        (tool.name.toLowerCase().includes("list") &&
-          tool.name.toLowerCase().includes("message"))
+        (tool.name.toLowerCase().includes("fetch") &&
+          tool.name.toLowerCase().includes("email"))
     );
 
-    if (!listMessagesTool) {
+    if (!fetchEmailsTool) {
       // Search for it
       try {
         const searchResults = await composio.tools.get(externalUserId, {
           toolkits: ["GMAIL"],
-          search: "list messages",
+          search: "fetch emails",
           limit: 50,
         });
-        listMessagesTool = searchResults.find(
+        fetchEmailsTool = searchResults.find(
           (tool) =>
+            tool.name === "GMAIL_FETCH_EMAILS" ||
             tool.name === "GMAIL_LIST_MESSAGES" ||
-            tool.name === "GMAIL_LIST_SENT_MESSAGES" ||
-            (tool.name.toLowerCase().includes("list") &&
-              tool.name.toLowerCase().includes("message"))
+            (tool.name.toLowerCase().includes("fetch") &&
+              tool.name.toLowerCase().includes("email"))
         );
       } catch (searchError) {
         console.error(
-          "[Gmail] Error searching for list messages tool:",
+          "[Gmail] Error searching for fetch emails tool:",
           searchError
         );
       }
     }
 
-    if (!listMessagesTool) {
+    if (!fetchEmailsTool) {
       console.warn(
-        "[Gmail] List messages tool not found. Available tools:",
+        "[Gmail] Fetch emails tool not found. Available tools:",
         gmailTools.map((t) => t.name).slice(0, 10)
       );
       return res.json({
         ok: true,
         emails: [],
-        message: "Gmail list messages tool not found",
+        message: "Gmail fetch emails tool not found",
       });
     }
 
-    console.log(`[Gmail] Using tool: ${listMessagesTool.name}`);
+    console.log(`[Gmail] Using tool: ${fetchEmailsTool.name}`);
 
-    // Try fetching messages - try inbox first, then sent
+    // Try fetching emails using Composio's expected parameters
     let messagesResult;
     const queries = ["in:inbox", "in:sent", ""]; // Try inbox, sent, then all
 
     for (const query of queries) {
       try {
-        const args = query ? { query, maxResults: 10 } : { maxResults: 10 };
+        // Use Composio's expected parameters structure
+        const args = {
+          ids_only: false,
+          include_payload: true,
+          include_spam_trash: false,
+          max_results: 4, // Limit to 4 for UI
+          page_token: null,
+          query: query || null,
+          user_id: "me",
+          verbose: true,
+        };
         console.log(
           `[Gmail] Attempting to fetch with query: "${query || "all"}"`
         );
 
-        messagesResult = await composio.tools.execute(listMessagesTool.name, {
+        messagesResult = await composio.tools.execute(fetchEmailsTool.name, {
           userId: externalUserId,
           arguments: args,
         });
+
+        console.log(
+          "[Gmail] Raw result structure:",
+          JSON.stringify(Object.keys(messagesResult || {})).substring(0, 300)
+        );
 
         console.log(
           `[Gmail] Successfully fetched messages with query: "${
@@ -728,14 +744,21 @@ export const getGmailEmails = async (req, res) => {
         if (query === queries[0]) {
           // Only try fallback on first attempt
           try {
-            console.log("[Gmail] Trying direct GMAIL_LIST_MESSAGES tool...");
+            console.log("[Gmail] Trying direct GMAIL_FETCH_EMAILS tool...");
             messagesResult = await composio.tools.execute(
-              "GMAIL_LIST_MESSAGES",
+              "GMAIL_FETCH_EMAILS",
               {
                 userId: externalUserId,
-                arguments: query
-                  ? { query, maxResults: 10 }
-                  : { maxResults: 10 },
+                arguments: {
+                  ids_only: false,
+                  include_payload: true,
+                  include_spam_trash: false,
+                  max_results: 4,
+                  page_token: null,
+                  query: query || null,
+                  user_id: "me",
+                  verbose: true,
+                },
               }
             );
             console.log("[Gmail] Direct tool execution succeeded");
@@ -779,10 +802,12 @@ export const getGmailEmails = async (req, res) => {
     }
 
     console.log(`[Gmail] Extracted ${messages.length} messages from result`);
-    console.log(
-      "[Gmail] Result structure:",
-      JSON.stringify(Object.keys(messagesResult || {})).substring(0, 200)
-    );
+    if (messages.length > 0) {
+      console.log(
+        "[Gmail] First message structure:",
+        JSON.stringify(messages[0]).substring(0, 500)
+      );
+    }
 
     if (messages.length === 0) {
       console.warn("[Gmail] No messages found in result");
@@ -794,65 +819,78 @@ export const getGmailEmails = async (req, res) => {
     }
 
     // Get full message details for each message
-    const emailPromises = messages.slice(0, 10).map(async (message) => {
+    const emailPromises = messages.slice(0, 4).map(async (message) => {
       try {
-        // Get the get message tool
-        let getMessageTool = gmailTools.find(
-          (tool) =>
-            tool.name === "GMAIL_GET_MESSAGE" ||
-            tool.name === "GMAIL_READ_MESSAGE" ||
-            (tool.name.toLowerCase().includes("get") &&
-              tool.name.toLowerCase().includes("message"))
-        );
+        // Initialize defaults
+        let subject = "No Subject";
+        let from = "Unknown";
+        let to = "Unknown";
+        let date = new Date().toISOString();
+        let body = "";
 
-        if (!getMessageTool) {
-          const searchResults = await composio.tools.get(externalUserId, {
-            toolkits: ["GMAIL"],
-            search: "get message",
-            limit: 20,
-          });
-          getMessageTool = searchResults.find(
-            (tool) =>
-              tool.name === "GMAIL_GET_MESSAGE" ||
-              tool.name === "GMAIL_READ_MESSAGE"
-          );
-        }
-
-        if (!getMessageTool) {
+        // Extract message ID
+        const messageId = message.messageId || message.id;
+        if (!messageId) {
+          console.warn("[Gmail] No message ID found");
           return null;
         }
 
-        const messageId = message.id || message.messageId || message.message_id;
-        if (!messageId) return null;
-
-        const messageResult = await composio.tools.execute(
-          getMessageTool.name,
-          {
-            userId: externalUserId,
-            arguments: {
-              messageId: messageId,
-              format: "full",
-            },
+        // GMAIL_FETCH_EMAILS already returns messageText, use it directly
+        // Individual message fetch returns empty data, so skip it
+        if (message.messageText) {
+          const text = message.messageText;
+          
+          // Extract subject from first meaningful line
+          const lines = text.split(/\r?\n/).filter(l => l.trim() && l.trim().length > 3);
+          if (lines.length > 0) {
+            const firstLine = lines[0].trim();
+            // Use first line as subject if it's reasonable (not too long, no URLs)
+            if (firstLine.length < 100 && !firstLine.match(/https?:\/\//)) {
+              subject = firstLine.substring(0, 80);
+            } else {
+              // Try to find "Subject:" pattern
+              const subjectMatch = text.match(/Subject:\s*([^\r\n]+)/i);
+              if (subjectMatch) {
+                subject = subjectMatch[1].trim().substring(0, 80);
+              }
+            }
           }
-        );
 
-        // Extract message data
-        const messageData =
-          messageResult?.data || messageResult?.payload || messageResult;
-        const headers = messageData?.headers || [];
-        const getHeader = (name) => {
-          const header = headers.find((h) => h.name === name);
-          return header?.value || "";
-        };
+          // Extract body - clean and get first 500 chars
+          body = text
+            .replace(/<[^>]+>/g, " ")
+            .replace(/\r\n/g, " ")
+            .replace(/\n/g, " ")
+            .replace(/\s+/g, " ")
+            .trim()
+            .substring(0, 500);
 
-        const subject = getHeader("Subject") || "No Subject";
-        const to = getHeader("To") || "Unknown";
-        const date = getHeader("Date") || new Date().toISOString();
-        const body =
-          messageData?.body?.data ||
-          messageData?.snippet ||
-          messageData?.body?.textPlain ||
-          "";
+          // Try to extract "From:" 
+          const fromMatch = text.match(/From:\s*([^\r\n<]+)/i) ||
+                           text.match(/from\s+([^\r\n<@]+@[^\r\n<]+)/i);
+          if (fromMatch) {
+            from = fromMatch[1].trim().replace(/[<>]/g, '');
+          }
+
+          // Try to extract date
+          const dateMatch = text.match(/Date:\s*([^\r\n]+)/i);
+          if (dateMatch) {
+            try {
+              const parsedDate = new Date(dateMatch[1].trim());
+              if (!isNaN(parsedDate.getTime())) {
+                date = parsedDate.toISOString();
+              }
+            } catch (e) {
+              // Invalid date, keep default
+            }
+          }
+        }
+
+        // If still no subject, use first part of body
+        if (subject === "No Subject" && body) {
+          subject = body.substring(0, 50).trim();
+          if (subject.length === 50) subject += "...";
+        }
 
         // Use Claude to analyze the email
         const analysisPrompt = `Analyze this email and provide:
@@ -878,30 +916,62 @@ Respond in JSON format:
           category: "Other",
         };
 
+        // Try Claude analysis, but don't fail if it doesn't work
         try {
-          const claudeResponse = await anthropic.messages.create({
-            model: "claude-3-5-sonnet-20241022",
-            max_tokens: 500,
-            messages: [
-              {
-                role: "user",
-                content: analysisPrompt,
-              },
-            ],
-          });
+          // Try different model names
+          const modelNames = [
+            "claude-3-5-sonnet",
+            "claude-3-opus-20240229",
+            "claude-3-sonnet-20240229",
+          ];
 
-          const content = claudeResponse.content[0];
-          if (content.type === "text") {
-            const text = content.text;
-            // Try to extract JSON from the response
-            const jsonMatch = text.match(/\{[\s\S]*\}/);
-            if (jsonMatch) {
-              analysis = JSON.parse(jsonMatch[0]);
+          let claudeResponse = null;
+          let lastError = null;
+
+          for (const modelName of modelNames) {
+            try {
+              claudeResponse = await anthropic.messages.create({
+                model: modelName,
+                max_tokens: 500,
+                messages: [
+                  {
+                    role: "user",
+                    content: analysisPrompt,
+                  },
+                ],
+              });
+              break; // Success, exit loop
+            } catch (modelError) {
+              lastError = modelError;
+              continue; // Try next model
             }
           }
+
+          if (claudeResponse) {
+            const content = claudeResponse.content[0];
+            if (content.type === "text") {
+              const text = content.text;
+              // Try to extract JSON from the response
+              const jsonMatch = text.match(/\{[\s\S]*\}/);
+              if (jsonMatch) {
+                try {
+                  analysis = JSON.parse(jsonMatch[0]);
+                } catch (parseError) {
+                  console.warn("[Gmail] Failed to parse Claude response JSON");
+                }
+              }
+            }
+          } else {
+            console.warn(
+              "[Gmail] All Claude models failed, using fallback analysis"
+            );
+          }
         } catch (claudeError) {
-          console.error("Error analyzing email with Claude:", claudeError);
-          // Use fallback analysis
+          console.warn(
+            "[Gmail] Claude analysis unavailable, using fallback:",
+            claudeError.message
+          );
+          // Use fallback analysis - already set above
         }
 
         // Format timestamp
@@ -925,8 +995,10 @@ Respond in JSON format:
         }
 
         return {
-          id: messageId,
-          sender: to.split(",")[0].trim(), // First recipient
+          id: message.messageId || message.id || "unknown",
+          sender:
+            from.split(",")[0].trim().replace(/[<>]/g, "").split("@")[0] ||
+            "Unknown", // First sender, clean up, just name part
           subject: subject,
           summary: analysis.summary,
           timestamp: timestamp,
@@ -943,9 +1015,12 @@ Respond in JSON format:
       (email) => email !== null
     );
 
+    // Limit to 4 emails for the UI
+    const limitedEmails = emails.slice(0, 4);
+
     res.json({
       ok: true,
-      emails: emails,
+      emails: limitedEmails,
     });
   } catch (e) {
     console.error("Error fetching Gmail emails:", e);

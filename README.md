@@ -44,19 +44,13 @@ Proactively sends reminders for important deadlines, meetings, and unread priori
 
 [gif goes here]
 
-### ✅ Manual Task Management
-
-Allows students to add personal to-dos, edit existing tasks, or mark items as complete, keeping the dashboard accurate and reflecting all responsibilities.
-
-[gif goes here]
-
 ### AI Email Summarizer
 
 Scans the user's Gmail inbox for important messages (like from professors) and displays brief, AI-generated summaries directly in the dashboard, highlighting key action items.
 
 [gif goes here]
 
-### Dashboard Filtering
+### ✅ Dashboard Filtering
 
 Allows users to filter the task list and calendar view by category (e.g., "School," "Personal") or by source (e.g., "Canvas," "Gmail") to focus on one area at a time.
 
@@ -67,7 +61,7 @@ Connect the application to third-party tools and APIs using the Composio platfor
 
 [gif goes here]
 
-### Toast Alerts
+### ✅ Toast Alerts
 Show pop-up notifications (toasts) to provide brief feedback to the user (e.g., "Task saved successfully!").
 
 [gif goes here]
@@ -92,12 +86,12 @@ Add server-side checks to ensure all data received from the client (e.g., in for
 
 [gif goes here]
 
-### Gracefull Error Handling - Backend
+### Graceful Error Handling - Backend
 Implement a robust system on the server to catch, manage, and send clear, helpful error messages to the client instead of crashing.
 
 [gif goes here]
 
-### On Page Interaction - Frontend
+### ✅ On Page Interaction - Frontend
 Develop the core user interface interactions, such as clicking buttons, filling forms, and having the page update dynamically without a full reload.
 
 [gif goes here]
@@ -117,7 +111,7 @@ Build the server-side API endpoints (e.g., GET, POST, PUT routes) that the front
 
 [gif goes here]
 
-### Deploy on Render
+### ✅ Deploy on Render
 Configure and deploy the entire full-stack application (both frontend and backend) to the Render hosting platform to make it live on the web.
 
 [gif goes here]

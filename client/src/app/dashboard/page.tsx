@@ -329,7 +329,7 @@ function DashboardPage() {
                                                 </div>
                                             </div>
                                             <div className="flex-1 overflow-y-auto">
-                                                <Task />
+                                                <Task assignments={assignments} setAssignments={setAssignments} />
                                             </div>
                                         </div>
                                     </div>

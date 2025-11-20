@@ -1,67 +1,26 @@
+
 import { useState } from "react";
 
-interface Task {
-    id: number;
+interface Assignment {
+    id: string | number;
     name: string;
-    courseName?: string;
+    courseName: string;
     dueDate: string;
+    points: number | null;
+    submitted: string | null;
+    url: string | null;
     priority: "low" | "medium" | "high";
     estimatedHours: number | null;
     status: "not_started" | "in_progress" | "done";
-    url?: string | null;
 }
 
-export default function TasksUI() {
-    const [tasks] = useState<Task[]>([
-        {
-            id: 1,
-            name: "Submit CS 101 Final Project",
-            dueDate: "2025-11-18T23:59:00",
-            priority: "high",
-            estimatedHours: null,
-            status: "not_started",
-        },
-        {
-            id: 2,
-            name: "Review Math Chapter 5",
-            dueDate: "2025-11-19T12:00:00",
-            priority: "high",
-            estimatedHours: null,
-            status: "not_started",
-        },
-        {
-            id: 3,
-            name: "Reply to Professor's Email",
-            dueDate: "2025-11-18T17:00:00",
-            priority: "medium",
-            estimatedHours: null,
-            status: "not_started",
-        },
-        {
-            id: 4,
-            name: "Complete Work Report",
-            dueDate: "2025-11-08T12:00:00",
-            priority: "low",
-            estimatedHours: null,
-            status: "not_started",
-        },
-        {
-            id: 5,
-            name: "Prepare Presentation Slides",
-            dueDate: "2025-11-07T10:00:00",
-            priority: "high",
-            estimatedHours: null,
-            status: "not_started",
-        },
-        {
-            id: 6,
-            name: "Book Doctor Appointment",
-            dueDate: "2025-11-25T09:00:00",
-            priority: "low",
-            estimatedHours: null,
-            status: "not_started",
-        },
-    ]);
+interface TaskProps {
+    assignments: Assignment[];
+    setAssignments: React.Dispatch<React.SetStateAction<Assignment[]>>;
+}
+
+export default function TasksUI({ assignments, setAssignments }: TaskProps) {
+    const [loadingId, setLoadingId] = useState<string | number | null>(null);
 
     const priorityConfig = {
         high: {
@@ -105,26 +64,79 @@ export default function TasksUI() {
         });
     };
 
+    // Sort by priority (AI or user), then due date
+    const sorted = [...assignments]
+        .filter(t => t.status !== "done")
+        .sort((a, b) => {
+            const priorityOrder = { high: 0, medium: 1, low: 2 };
+            if (priorityOrder[a.priority] !== priorityOrder[b.priority]) {
+                return priorityOrder[a.priority] - priorityOrder[b.priority];
+            }
+            return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
+        });
+
+    // Mark as completed
+    const handleComplete = async (task: Assignment) => {
+        setLoadingId(task.id);
+        try {
+            if (task.url) {
+                // Canvas assignment: update assignment metadata
+                await fetch(`/api/canvas/assignments/${task.id}/metadata`, {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json" },
+                    credentials: "include",
+                    body: JSON.stringify({ status: "done" }),
+                });
+            } else {
+                // Manual task
+                await fetch(`/api/tasks/${String(task.id).replace('task-', '')}`, {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json" },
+                    credentials: "include",
+                    body: JSON.stringify({ status: "completed" }),
+                });
+            }
+            setAssignments(prev => prev.map(t => t.id === task.id ? { ...t, status: "done" } : t));
+        } finally {
+            setLoadingId(null);
+        }
+    };
+
     return (
         <div className="space-y-1 pr-1">
-            {tasks.map((task) => (
+            {sorted.length === 0 && (
+                <div className="text-xs text-slate-500 px-2 py-4 text-center">No upcoming tasks! 🎉</div>
+            )}
+            {sorted.map((task) => (
                 <div
                     key={task.id}
                     className={`flex items-start items-center gap-1 px-1 py-1 bg-slate-50 border-l-4 rounded-lg hover:shadow-md transition-all cursor-pointer ${priorityConfig[task.priority].border}`}
                 >
                     {/* Checkbox */}
-                    <div className="">
-                        <div className="h-1.5 w-1.5 rounded-full border-2 border-slate-300 bg-white hover:border-slate-400 transition" />
-                    </div>
+                    <button
+                        onClick={e => { e.stopPropagation(); handleComplete(task); }}
+                        disabled={loadingId === task.id}
+                        className={`h-1.5 w-1.5 rounded-full border-2 flex items-center justify-center ${task.status === "done" ? "border-emerald-500 bg-emerald-100" : "border-slate-300 bg-white hover:border-slate-400"} transition disabled:opacity-50`}
+                        title={task.status === "done" ? "Completed" : "Mark as completed"}
+                        style={{ cursor: loadingId === task.id ? 'not-allowed' : 'pointer' }}
+                    >
+                        {loadingId === task.id ? (
+                            <svg className="animate-spin w-1 h-1 text-emerald-500" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path></svg>
+                        ) : task.status === "done" ? (
+                            <svg className="w-1 h-1 text-emerald-500" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" strokeWidth="3" d="M5 13l4 4L19 7" /></svg>
+                        ) : null}
+                    </button>
 
                     {/* Content */}
                     <div className="flex-1 min-w-0">
                         <h3 className="text-sm font-semibold text-slate-900 mb-1">
                             {task.name}
                         </h3>
-                        
                         <div className="text-xs text-slate-600">
                             <span className="whitespace-nowrap">{formatDate(task.dueDate)}, {formatTime(task.dueDate)}</span>
+                            {task.courseName && (
+                                <span className="ml-2 text-xs text-slate-400">{task.courseName}</span>
+                            )}
                         </div>
                     </div>
 

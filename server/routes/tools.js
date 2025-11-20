@@ -672,9 +672,8 @@ export const getGmailEmails = async (req, res) => {
           (tool) =>
             tool.name === "GMAIL_FETCH_EMAILS" ||
             tool.name === "GMAIL_LIST_MESSAGES" ||
-            (tool.name.toLowerCase().includes("fetch") &&
+            (tool.name.toLowerCase().includes("fetch") && tool.name.toLowerCase().includes("email"))
         );
-                text.match(/from\s+([^\r\n<@]+@[\w.-]+)/i);
       } catch (searchError) {
         console.error(
           "[Gmail] Error searching for fetch emails tool:",
@@ -906,8 +905,7 @@ export const getGmailEmails = async (req, res) => {
           // Try to extract "From:"
           let fromMatch =
             text.match(/From:\s*([^\r\n<]+)/i) ||
-            text.match(/from\s+([^\r\n<@]+@[^
-\n<]+)/i);
+            text.match(/from\s+([^\r\n<@]+@[^\n<]+)/i);
           if (fromMatch) {
             from = fromMatch[1].trim().replace(/[<>]/g, "");
           } else if (message.from) {

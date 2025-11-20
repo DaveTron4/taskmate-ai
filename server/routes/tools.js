@@ -835,23 +835,60 @@ export const getGmailEmails = async (req, res) => {
           return null;
         }
 
+        // Use messageTimestamp if available
+        if (message.messageTimestamp) {
+          try {
+            const parsedDate = new Date(message.messageTimestamp);
+            if (!isNaN(parsedDate.getTime())) {
+              date = parsedDate.toISOString();
+            }
+          } catch (e) {
+            // Invalid date, keep default
+          }
+        }
+
         // GMAIL_FETCH_EMAILS already returns messageText, use it directly
         // Individual message fetch returns empty data, so skip it
         if (message.messageText) {
           const text = message.messageText;
-          
-          // Extract subject from first meaningful line
-          const lines = text.split(/\r?\n/).filter(l => l.trim() && l.trim().length > 3);
-          if (lines.length > 0) {
-            const firstLine = lines[0].trim();
-            // Use first line as subject if it's reasonable (not too long, no URLs)
-            if (firstLine.length < 100 && !firstLine.match(/https?:\/\//)) {
-              subject = firstLine.substring(0, 80);
+
+          // First, try to extract title from HTML <title> tag
+          const titleMatch = text.match(/<title[^>]*>([^<]+)<\/title>/i);
+          if (titleMatch) {
+            subject = titleMatch[1].trim().substring(0, 80);
+          } else {
+            // Try to find explicit "Subject:" header
+            const subjectMatch = text.match(/Subject:\s*([^\r\n]+)/i);
+            if (subjectMatch) {
+              subject = subjectMatch[1].trim().substring(0, 80);
             } else {
-              // Try to find "Subject:" pattern
-              const subjectMatch = text.match(/Subject:\s*([^\r\n]+)/i);
-              if (subjectMatch) {
-                subject = subjectMatch[1].trim().substring(0, 80);
+              // Look for email header patterns to identify where headers end
+              const hasEmailHeaders = /From:|To:|Date:|Reply-To:/i.test(text);
+
+              if (hasEmailHeaders) {
+                // If we have email headers, the subject might be before "From:" or after "Subject:"
+                // Extract lines before "From:" as potential subject area
+                const beforeFrom = text.split(/From:/i)[0];
+                const lines = beforeFrom.split(/\r?\n/).filter((l) => l.trim());
+
+                // Look for a line that looks like a subject (short, no URLs, not an email address)
+                for (const line of lines) {
+                  const trimmed = line.trim();
+                  if (
+                    trimmed.length > 5 &&
+                    trimmed.length < 100 &&
+                    !trimmed.match(/https?:\/\//) &&
+                    !trimmed.match(/^[\w.-]+@[\w.-]+/) &&
+                    !trimmed.match(/^Subject:/i)
+                  ) {
+                    subject = trimmed.substring(0, 80);
+                    break;
+                  }
+                }
+              } else {
+                // No email headers - messageText is likely just the body
+                // Skip subject extraction, will use AI summary as title
+                subject = "Email"; // Placeholder, will be replaced by AI summary
               }
             }
           }
@@ -865,23 +902,26 @@ export const getGmailEmails = async (req, res) => {
             .trim()
             .substring(0, 500);
 
-          // Try to extract "From:" 
-          const fromMatch = text.match(/From:\s*([^\r\n<]+)/i) ||
-                           text.match(/from\s+([^\r\n<@]+@[^\r\n<]+)/i);
+          // Try to extract "From:"
+          const fromMatch =
+            text.match(/From:\s*([^\r\n<]+)/i) ||
+            text.match(/from\s+([^\r\n<@]+@[^\r\n<]+)/i);
           if (fromMatch) {
-            from = fromMatch[1].trim().replace(/[<>]/g, '');
+            from = fromMatch[1].trim().replace(/[<>]/g, "");
           }
 
-          // Try to extract date
-          const dateMatch = text.match(/Date:\s*([^\r\n]+)/i);
-          if (dateMatch) {
-            try {
-              const parsedDate = new Date(dateMatch[1].trim());
-              if (!isNaN(parsedDate.getTime())) {
-                date = parsedDate.toISOString();
+          // Try to extract date from text if messageTimestamp wasn't available
+          if (!message.messageTimestamp) {
+            const dateMatch = text.match(/Date:\s*([^\r\n]+)/i);
+            if (dateMatch) {
+              try {
+                const parsedDate = new Date(dateMatch[1].trim());
+                if (!isNaN(parsedDate.getTime())) {
+                  date = parsedDate.toISOString();
+                }
+              } catch (e) {
+                // Invalid date, keep default
               }
-            } catch (e) {
-              // Invalid date, keep default
             }
           }
         }
@@ -994,12 +1034,21 @@ Respond in JSON format:
           timestamp = emailDate.toLocaleDateString();
         }
 
+        // Use extracted subject (from HTML title tag or email headers) as the title
+        // Only use AI summary if we couldn't extract a good subject
+        const displaySubject =
+          subject && subject !== "No Subject" && subject !== "Email"
+            ? subject
+            : analysis.summary && analysis.summary.length > 10
+            ? analysis.summary.split(".")[0].substring(0, 80) // First sentence of summary as fallback
+            : "Email";
+
         return {
           id: message.messageId || message.id || "unknown",
           sender:
             from.split(",")[0].trim().replace(/[<>]/g, "").split("@")[0] ||
             "Unknown", // First sender, clean up, just name part
-          subject: subject,
+          subject: displaySubject,
           summary: analysis.summary,
           timestamp: timestamp,
           priority: analysis.priority,

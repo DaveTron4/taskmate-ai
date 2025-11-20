@@ -51,6 +51,91 @@ function DashboardPage() {
     const [activeView, setActiveView] = useState('dashboard')
     const navigate = useNavigate()
 
+    // Add a new task to state instantly
+    const handleTaskCreate = (task: any) => {
+        // Add to calendarEvents
+        if (task.due_date && !task.has_no_due_date) {
+            const dueDate = new Date(task.due_date)
+            setCalendarEvents(prev => [
+                ...prev,
+                {
+                    id: `task-${task.task_id}`,
+                    title: task.title,
+                    start: dueDate,
+                    end: dueDate,
+                    allDay: !task.due_time,
+                    category: task.category,
+                    source: task.source || "manual",
+                    extendedProps: {
+                        type: "task",
+                        description: task.description,
+                        priority: task.priority,
+                        source: task.source || "manual",
+                    },
+                },
+            ])
+        }
+        // Add to assignments
+        setAssignments(prev => [
+            ...prev,
+            {
+                id: `task-${task.task_id}`,
+                name: task.title,
+                courseName: task.category.charAt(0).toUpperCase() + task.category.slice(1),
+                dueDate: task.due_date || new Date().toISOString(),
+                points: null,
+                submitted: task.status === 'completed' ? new Date().toISOString() : null,
+                url: null,
+                priority: task.priority,
+                estimatedHours: null,
+                status: task.status === 'completed' ? 'done' : 'not_started',
+            },
+        ])
+    }
+
+    // Update a task in state instantly
+    const handleTaskUpdate = (task: any) => {
+        // Update in calendarEvents
+        setCalendarEvents(prev => prev.map(ev =>
+            ev.id === `task-${task.task_id}`
+                ? {
+                    ...ev,
+                    title: task.title,
+                    start: task.due_date ? new Date(task.due_date) : ev.start,
+                    end: task.due_date ? new Date(task.due_date) : ev.end,
+                    allDay: !task.due_time,
+                    category: task.category,
+                    source: task.source || "manual",
+                    extendedProps: {
+                        ...ev.extendedProps,
+                        description: task.description,
+                        priority: task.priority,
+                        source: task.source || "manual",
+                    },
+                }
+                : ev
+        ))
+        // Update in assignments
+        setAssignments(prev => prev.map(a =>
+            a.id === `task-${task.task_id}`
+                ? {
+                    ...a,
+                    name: task.title,
+                    courseName: task.category.charAt(0).toUpperCase() + task.category.slice(1),
+                    dueDate: task.due_date || new Date().toISOString(),
+                    priority: task.priority,
+                    status: task.status === 'completed' ? 'done' : 'not_started',
+                }
+                : a
+        ))
+    }
+
+    // Delete a task from state instantly
+    const handleTaskDelete = (taskId: string) => {
+        setCalendarEvents(prev => prev.filter(ev => ev.id !== `task-${taskId}`))
+        setAssignments(prev => prev.filter(a => a.id !== `task-${taskId}`))
+    }
+
     useEffect(() => {
         fetchAllData()
     }, [])
@@ -201,7 +286,12 @@ function DashboardPage() {
             >
                 <SideBar activeView={activeView} onViewChange={setActiveView} />
                 <div className="flex-1 flex flex-col">
-                    <Top user={user} />
+                    <Top
+                        user={user}
+                        onTaskCreate={handleTaskCreate}
+                        onTaskUpdate={handleTaskUpdate}
+                        onTaskDelete={handleTaskDelete}
+                    />
                     {activeView === 'dashboard' && (
                         <div className="flex-1 px-2 md:px-3 pt-2 md:pt-3 pb-4 md:pb-6">
                             <div className="flex flex-col gap-2 h-full">

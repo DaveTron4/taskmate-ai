@@ -12,9 +12,12 @@ interface User {
 
 interface TopProps {
     user: User;
+    onTaskCreate?: (task: any) => void;
+    onTaskUpdate?: (task: any) => void;
+    onTaskDelete?: (taskId: string) => void;
 }
 
-export default function Top({ user }: TopProps) {
+export default function Top({ user, onTaskCreate, onTaskUpdate, onTaskDelete }: TopProps) {
     const navigate = useNavigate();
     const { addToast } = useToast();
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -40,7 +43,6 @@ export default function Top({ user }: TopProps) {
 
     const handleSaveTask = async (task: any) => {
         try {
-            // Check if we're editing or creating
             const isEditing = task.taskId;
             const url = isEditing 
                 ? `/api/tasks/${task.taskId}`
@@ -57,18 +59,18 @@ export default function Top({ user }: TopProps) {
             });
 
             const data = await response.json();
-            
             if (data.ok) {
-                console.log(`Task ${isEditing ? 'updated' : 'saved'} successfully:`, data.task);
                 addToast(
                     `Task ${isEditing ? 'updated' : 'created'} successfully`,
                     'success',
                     `"${task.title}" has been ${isEditing ? 'updated' : 'added to your task list'}.`
                 );
-                // Reload the page to fetch updated tasks
-                setTimeout(() => window.location.reload(), 1000);
+                if (isEditing && onTaskUpdate) {
+                    onTaskUpdate(data.task);
+                } else if (!isEditing && onTaskCreate) {
+                    onTaskCreate(data.task);
+                }
             } else {
-                console.error(`Error ${isEditing ? 'updating' : 'saving'} task:`, data.error);
                 addToast(
                     `Failed to ${isEditing ? 'update' : 'create'} task`,
                     'danger',
@@ -76,7 +78,6 @@ export default function Top({ user }: TopProps) {
                 );
             }
         } catch (error) {
-            console.error("Error saving task:", error);
             addToast(
                 'Error saving task',
                 'danger',
@@ -93,18 +94,16 @@ export default function Top({ user }: TopProps) {
             });
 
             const data = await response.json();
-            
             if (data.ok) {
-                console.log("Task deleted successfully");
                 addToast(
                     'Task deleted successfully',
                     'success',
                     'The task has been removed from your list.'
                 );
-                // Reload the page to fetch updated tasks
-                setTimeout(() => window.location.reload(), 1000);
+                if (onTaskDelete) {
+                    onTaskDelete(taskId);
+                }
             } else {
-                console.error("Error deleting task:", data.error);
                 addToast(
                     'Failed to delete task',
                     'danger',
@@ -112,7 +111,6 @@ export default function Top({ user }: TopProps) {
                 );
             }
         } catch (error) {
-            console.error("Error deleting task:", error);
             addToast(
                 'Error deleting task',
                 'danger',

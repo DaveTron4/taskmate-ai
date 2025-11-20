@@ -104,8 +104,10 @@ function DashboardPage() {
                         ...ev,
                         start: new Date(ev.start),
                         end: new Date(ev.end),
+                        source: "gmail", // Google Calendar events
                         extendedProps: {
                             type: "calendar",
+                            source: "gmail",
                         },
                     }))
                     allEvents = [...allEvents, ...events]
@@ -147,10 +149,12 @@ function DashboardPage() {
                                 end: dueDate,
                                 allDay: !task.due_time,
                                 category: task.category,
+                                source: task.source || "manual", // Use backend source field
                                 extendedProps: {
                                     type: "task",
                                     description: task.description,
                                     priority: task.priority,
+                                    source: task.source || "manual",
                                 },
                             }
                         })

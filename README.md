@@ -44,7 +44,7 @@ Proactively sends reminders for important deadlines, meetings, and unread priori
 
 [gif goes here]
 
-### AI Email Summarizer
+### ✅ AI Email Summarizer
 
 Scans the user's Gmail inbox for important messages (like from professors) and displays brief, AI-generated summaries directly in the dashboard, highlighting key action items.
 

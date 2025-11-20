@@ -4,7 +4,7 @@ CodePath WEB103 Final Project
 
 Designed and developed by: Htet Htwe & David Salas Carrascal
 
-🔗 Link to deployed app: TBD
+🔗 Link to deployed app: [TaskMate AI](https://taskmate-ai-ef8u.onrender.com/)
 
 ## About
 
@@ -30,13 +30,13 @@ Backend: Express, PostgreSQL, Render, Composio
 
 Analyzes all imported tasks and deadlines using AI to suggest what to focus on next — helping students stay productive without feeling overwhelmed.
 
-[gif goes here]
+![Task Prioritization](./feature%20gifs/tasks_prioritization.gif)
 
 ### ✅ Smart Schedule Dashboard
 
 Displays all assignments and events in a clean, color-coded weekly view that updates in real time whenever new data is synced.
 
-[gif goes here]
+![Smart Schedule Dashboard](./feature%20gifs/Smart_schedule_dashboard.gif)
 
 ### Intelligent Notifications
 
@@ -48,7 +48,7 @@ Proactively sends reminders for important deadlines, meetings, and unread priori
 
 Scans the user's Gmail inbox for important messages (like from professors) and displays brief, AI-generated summaries directly in the dashboard, highlighting key action items.
 
-[gif goes here]
+![Ai Email Summarized](./feature%20gifs/ai_email_summerizer.gif)
 
 ### ✅ Dashboard Filtering
 
@@ -59,12 +59,12 @@ Allows users to filter the task list and calendar view by category (e.g., "Schoo
 ### ✅ Integrate Composio
 Connect the application to third-party tools and APIs using the Composio platform.
 
-[gif goes here]
+![Integrate Composio](./feature%20gifs/composio_integration.gif)
 
 ### ✅ Toast Alerts
 Show pop-up notifications (toasts) to provide brief feedback to the user (e.g., "Task saved successfully!").
 
-[gif goes here]
+1[Toast Alerts](./feature%20gifs/toast.gif)
 
 ### Disable Buttons After Click
 Prevent users from accidentally submitting a form or action multiple times by disabling the button after the first click.
@@ -74,7 +74,7 @@ Prevent users from accidentally submitting a form or action multiple times by di
 ### ✅ Implement Spinners
 Display a loading spinner or indicator to show the user that data is being fetched or an action is processing.
 
-[gif goes here]
+![Implement Spinners](./feature%20gifs/composio_integration.gif)
 
 ### ✅ Set up GitHub OAuth
 Allow users to log in or authenticate with the application using their existing GitHub account.
@@ -86,10 +86,10 @@ Add server-side checks to ensure all data received from the client (e.g., in for
 
 [gif goes here]
 
-### Graceful Error Handling - Backend
+### ✅ Graceful Error Handling - Backend
 Implement a robust system on the server to catch, manage, and send clear, helpful error messages to the client instead of crashing.
 
-[gif goes here]
+![Graceful Error Handling](./feature%20gifs/graceful_error.gif)
 
 ### ✅ On Page Interaction - Frontend
 Develop the core user interface interactions, such as clicking buttons, filling forms, and having the page update dynamically without a full reload.
@@ -99,7 +99,7 @@ Develop the core user interface interactions, such as clicking buttons, filling 
 ### ✅ Redirect - Frontend
 Automatically navigate the user to a different page after a specific action (e.g., redirecting to the dashboard after a successful login).
 
-[gif goes here]
+![Redirect](./feature%20gifs/composio_integration.gif)
 
 ### ✅ Reset Database Function - Backend
 Create a special backend function or endpoint to clear and reset the database to a default state, which is useful for testing.
@@ -114,7 +114,7 @@ Build the server-side API endpoints (e.g., GET, POST, PUT routes) that the front
 ### ✅ Deploy on Render
 Configure and deploy the entire full-stack application (both frontend and backend) to the Render hosting platform to make it live on the web.
 
-[gif goes here]
+![Deploy on Render](./feature%20gifs/hosted_render.gif)
 
 ### ✅ Create Dynamic Routing - Frontend
 Set up client-side routing to handle dynamic URLs, such as viewing a specific item by its ID (e.g., `/tasks/123`).

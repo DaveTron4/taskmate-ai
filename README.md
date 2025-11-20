@@ -64,7 +64,7 @@ Connect the application to third-party tools and APIs using the Composio platfor
 ### ✅ Toast Alerts
 Show pop-up notifications (toasts) to provide brief feedback to the user (e.g., "Task saved successfully!").
 
-1[Toast Alerts](./feature%20gifs/toast.gif)
+![Toast Alerts](./feature%20gifs/toast.gif)
 
 ### Disable Buttons After Click
 Prevent users from accidentally submitting a form or action multiple times by disabling the button after the first click.

@@ -48,7 +48,7 @@ Scans the user's Gmail inbox for important messages (like from professors) and d
 
 Allows users to filter the task list and calendar view by category (e.g., "School," "Personal") or by source (e.g., "Canvas," "Gmail") to focus on one area at a time.
 
-[gif goes here]
+![Dashboard Filtering](./feature%20gifs/filtering.gif)
 
 ### ✅ Integrate Composio
 Connect the application to third-party tools and APIs using the Composio platform.
@@ -63,7 +63,7 @@ Show pop-up notifications (toasts) to provide brief feedback to the user (e.g., 
 ### ✅ Disable Buttons After Click
 Prevent users from accidentally submitting a form or action multiple times by disabling the button after the first click.
 
-[gif goes here]
+![Disable Burrons After Click](./feature%20gifs/disabled_buttons.gif)
 
 ### ✅ Implement Spinners
 Display a loading spinner or indicator to show the user that data is being fetched or an action is processing.
@@ -75,10 +75,6 @@ Allow users to log in or authenticate with the application using their existing 
 
 ![GitHub OAuth](./feature%20gifs/github_oauth.gif)
 
-### ✅ Validate Data - Backend
-Add server-side checks to ensure all data received from the client (e.g., in forms) is correct, complete, and secure before processing.
-
-[gif goes here]
 
 ### ✅ Graceful Error Handling - Backend
 Implement a robust system on the server to catch, manage, and send clear, helpful error messages to the client instead of crashing.
@@ -88,7 +84,7 @@ Implement a robust system on the server to catch, manage, and send clear, helpfu
 ### ✅ On Page Interaction - Frontend
 Develop the core user interface interactions, such as clicking buttons, filling forms, and having the page update dynamically without a full reload.
 
-[gif goes here]
+![On Page Interaction](./feature%20gifs/disabled_buttons.gif)
 
 ### ✅ Redirect - Frontend
 Automatically navigate the user to a different page after a specific action (e.g., redirecting to the dashboard after a successful login).
@@ -100,11 +96,6 @@ Create a special backend function or endpoint to clear and reset the database to
 
 ![Dabase Reset](./feature%20gifs/database_reset.gif)
 
-### ✅ Implement Backend API - Backend
-Build the server-side API endpoints (e.g., GET, POST, PUT routes) that the frontend will use to create, read, update, and delete data.
-
-[gif goes here]
-
 ### ✅ Deploy on Render
 Configure and deploy the entire full-stack application (both frontend and backend) to the Render hosting platform to make it live on the web.
 
@@ -113,25 +104,4 @@ Configure and deploy the entire full-stack application (both frontend and backen
 ### ✅ Create Dynamic Routing - Frontend
 Set up client-side routing to handle dynamic URLs, such as viewing a specific item by its ID (e.g., `/tasks/123`).
 
-[gif goes here]
-
-### ✅ Create Dynamic Routing - Backend
-Set up server-side API routes to handle dynamic parameters, like fetching data for a specific user or item (e.g., `/api/user/:id`).
-
-[gif goes here]
-
-### ✅ Set up React Frontend
-Initialize and configure the basic file structure, dependencies, and boilerplate for the client-side application using the React library.
-
-[gif goes here]
-
-### ✅ Set up Express Backend
-Initialize and configure the basic file structure, dependencies, and server setup for the backend API using the Express.js framework.
-
-[gif goes here]
-
-### [ADDITIONAL FEATURES GO HERE - ADD ALL FEATURES HERE IN THE FORMAT ABOVE; you will check these off and add gifs as you complete them]
-
-## Installation Instructions
-
-[instructions go here]
+![Dynamic Routing](./feature%20gifs/dynamic_routing.gif)
